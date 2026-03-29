@@ -1,0 +1,26 @@
+[Unit]
+Description=PuTTrY Web Terminal Service
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/yourusername/puttry
+
+[Service]
+Type=simple
+Environment="NODE_ENV=production"
+EnvironmentFile=%h/.puttry/.env
+
+# Server startup
+# Note: Replace the paths below with your actual Node.js and npm paths
+# Find npm path with: npm config get prefix
+ExecStart=/usr/local/bin/node /usr/local/lib/node_modules/@chfischerx/puttry/dist-server/server.js
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Resource limits (optional)
+# LimitNOFILE=65536
+# LimitNPROC=512
+
+[Install]
+WantedBy=default.target

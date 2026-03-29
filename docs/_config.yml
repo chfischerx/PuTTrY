@@ -1,0 +1,6 @@
+title: PuTTrY Documentation
+description: A secure, browser-based terminal that keeps your server sessions alive across devices and networks.
+theme: jekyll-theme-cayman
+include:
+  - CNAME
+  - README.md

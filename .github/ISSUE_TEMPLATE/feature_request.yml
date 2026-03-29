@@ -1,0 +1,45 @@
+name: Feature Request
+description: Suggest an improvement or new feature
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to make PuTTrY better? Share it here.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What problem does this solve or what need does it address?
+      placeholder: Currently I can't... / It would be nice if... / Users often struggle with...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like this to work?
+      placeholder: I'd like PuTTrY to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Are there other approaches or workarounds?
+      placeholder: Another option might be...
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: What does this affect?
+      options:
+        - label: CLI commands
+        - label: Session persistence
+        - label: Security/authentication
+        - label: Performance
+        - label: Documentation
+        - label: Other

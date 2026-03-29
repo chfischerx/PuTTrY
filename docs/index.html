@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PuTTrY is a secure, browser-based SSH terminal that keeps your server sessions alive across devices. Access your servers from any device with Passkeys, 2FA, end-to-end encryption, and team collaboration.">
+    <meta name="keywords" content="SSH terminal, web terminal, terminal emulator, remote shell, terminal sessions, secure terminal, browser SSH">
+    <meta name="author" content="Christian Fischer">
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="PuTTrY — Browser-Based SSH Terminal">
+    <meta property="og:description" content="Secure terminal sessions that persist across all your devices. No SSH client installation needed.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://puttry.io/">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PuTTrY — Browser-Based SSH Terminal">
+    <meta name="twitter:description" content="Secure terminal sessions that persist across all your devices. No SSH client installation needed.">
+
+    <title>PuTTrY — Secure Browser-Based SSH Terminal</title>
+    <!-- Schema markup for search engines -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "PuTTrY",
+      "description": "Secure browser-based SSH terminal with persistent sessions across devices",
+      "url": "https://puttry.io/",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "1"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Christian Fischer"
+      }
+    }
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ST7VDTXSNW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-ST7VDTXSNW');
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --c-void:          #080b0d;
+            --c-surface:       #0e1214;
+            --c-panel:         #141a1d;
+            --c-border:        #1e2830;
+            --c-border-bright: #2a3840;
+            --c-acid:          #39d353;
+            --c-acid-dim:      rgba(57, 211, 83, 0.12);
+            --c-acid-glow:     rgba(57, 211, 83, 0.25);
+            --c-text-primary:  #e8edf0;
+            --c-text-secondary:#5a7080;
+            --c-text-ghost:    #2a3840;
+            --c-dim-red:       #ff4444;
+            --c-blue-path:     #6eb3e8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+        }
+
+        header, .features, .docs-section, footer {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            min-height: 100vh;
+        }
+
+        body {
+            font-family: 'DM Mono', 'Courier New', monospace;
+            background: var(--c-void);
+            color: var(--c-text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-size: 200px 200px;
+        }
+
+        /* Header & Hero */
+        header {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            background: var(--c-void);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse 60% 40% at 50% 45%, rgba(57,211,83,0.07) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+            pointer-events: none;
+        }
+
+        header > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--c-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 2rem;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--c-acid);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--c-acid-glow); }
+            50% { opacity: 0.6; box-shadow: 0 0 8px 2px var(--c-acid-glow); }
+        }
+
+        .logo {
+            font-family: 'Fragment Mono', monospace;
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: var(--c-text-primary);
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px rgba(57, 211, 83, 0.4);
+            letter-spacing: 2px;
+        }
+
+        .tagline-wrapper {
+            font-size: 1.3rem;
+            color: var(--c-text-secondary);
+            margin-bottom: 2rem;
+            height: 2rem;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .typewriter {
+            display: inline-block;
+            border-right: 2px solid var(--c-acid);
+            animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% { border-right-color: var(--c-acid); }
+            50%, 100% { border-right-color: transparent; }
+        }
+
+        .command-box {
+            background: var(--c-surface);
+            border: 1px solid var(--c-border-bright);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin: 2rem auto;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'DM Mono', monospace;
+            font-size: 1rem;
+        }
+
+        .command-box:hover {
+            border-color: var(--c-acid);
+            background: var(--c-acid-dim);
+            box-shadow: 0 0 30px var(--c-acid-glow);
+        }
+
+        .command-box::before {
+            content: '$ ';
+            color: var(--c-text-primary);
+            font-weight: bold;
+        }
+
+        .command-text {
+            flex: 1;
+            color: var(--c-text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .copy-icon {
+            color: var(--c-text-secondary);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .command-box:hover .copy-icon {
+            color: var(--c-acid);
+            transform: scale(1.1);
+        }
+
+        .copy-feedback {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            background: var(--c-acid);
+            color: var(--c-void);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .copy-feedback.show {
+            animation: fadeInOut 2s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(10px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(10px); }
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 0.9rem 2rem;
+            margin: 1rem 0;
+            border: 2px solid var(--c-acid);
+            background: transparent;
+            color: var(--c-acid);
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            text-decoration: none;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .cta-button:hover {
+            background: var(--c-acid);
+            color: var(--c-void);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(57, 211, 83, 0.3);
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 2.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--c-text-ghost);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            animation: hint-bob 2s ease-in-out infinite;
+        }
+
+        .scroll-hint::after {
+            content: '';
+            display: block;
+            width: 1px;
+            height: 1rem;
+            background: linear-gradient(to bottom, var(--c-text-ghost), transparent);
+            margin: 0.5rem auto 0;
+        }
+
+        @keyframes hint-bob {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(8px); }
+        }
+
+        /* Features Section */
+        .features {
+            background: var(--c-void);
+            padding: 6rem 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .features-label {
+            color: var(--c-acid);
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .features h2 {
+            font-family: 'Fragment Mono', monospace;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            line-height: 1.05;
+            letter-spacing: -0.02em;
+            text-align: center;
+            color: var(--c-text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .features-lead {
+            font-family: 'DM Mono', monospace;
+            color: var(--c-text-secondary);
+            max-width: 500px;
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 1px;
+            max-width: 1000px;
+            width: 100%;
+            border: 1px solid var(--c-border);
+            background: var(--c-void);
+        }
+
+        .bento-a { grid-column: 1; grid-row: 1; }
+        .bento-b { grid-column: 2; grid-row: 1 / 3; }
+        .bento-c { grid-column: 1; grid-row: 2; }
+        .bento-d { grid-column: 1 / 3; grid-row: 3; }
+
+        .bento-item {
+            background: var(--c-surface);
+            padding: 3rem;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .bento-d {
+            min-height: 180px;
+            flex-direction: row;
+            align-items: center;
+            gap: 3rem;
+            border-top: 1px solid var(--c-acid);
+        }
+
+        .bento-item:hover {
+            background: var(--c-panel);
+        }
+
+        .bento-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2px;
+            height: 0;
+            background: var(--c-acid);
+            transition: height 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+
+        .bento-item:hover::before {
+            height: 100%;
+        }
+
+        .bento-num {
+            font-family: 'Fragment Mono', monospace;
+            font-size: 9rem;
+            color: var(--c-text-ghost);
+            position: absolute;
+            top: -0.5rem;
+            right: 1rem;
+            line-height: 1;
+        }
+
+        .bento-body {
+            position: relative;
+            z-index: 2;
+        }
+
+        .bento-item h3 {
+            font-family: 'Fragment Mono', monospace;
+            font-size: 1.4rem;
+            color: var(--c-text-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .bento-item p {
+            font-family: 'DM Mono', monospace;
+            color: var(--c-text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .bento-tag {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--c-text-ghost);
+            border: 1px solid var(--c-text-ghost);
+            border-radius: 2px;
+            padding: 0.4rem 0.8rem;
+            width: fit-content;
+            transition: all 0.3s ease;
+        }
+
+        .bento-item:hover .bento-tag {
+            color: var(--c-acid);
+            border-color: var(--c-acid);
+        }
+
+        .secure-tag {
+            color: var(--c-dim-red);
+            border-color: rgba(255, 68, 68, 0.3);
+        }
+
+        /* Docs Section */
+        .docs-section {
+            background: var(--c-surface);
+            padding: 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .terminal-window {
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid var(--c-border-bright);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            animation: terminal-rise 0.8s cubic-bezier(0.16,1,0.3,1) both;
+            animation-play-state: paused;
+        }
+
+        .terminal-window.visible {
+            animation-play-state: running;
+        }
+
+        @keyframes terminal-rise {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .terminal-chrome {
+            background: var(--c-panel);
+            padding: 0.9rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            border-bottom: 1px solid var(--c-border);
+        }
+
+        .chrome-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .chrome-red { background: #ff5f57; }
+        .chrome-yellow { background: #ffbd2e; }
+        .chrome-green-dot { background: #28ca41; }
+
+        .terminal-title {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--c-text-ghost);
+            margin-left: auto;
+        }
+
+        .terminal-body {
+            background: var(--c-void);
+            padding: 1.5rem 2rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .terminal-prompt {
+            display: flex;
+            gap: 0;
+            margin-bottom: 1rem;
+        }
+
+        .terminal-prompt--idle {
+            margin-top: 1rem;
+        }
+
+        .p-user, .p-host { color: var(--c-acid); }
+        .p-at, .p-sep, .p-dollar { color: var(--c-text-secondary); }
+        .p-path { color: var(--c-blue-path); }
+        .p-cmd { color: var(--c-text-primary); }
+
+        .terminal-output {
+            margin: 1.5rem 0;
+        }
+
+        .ls-header {
+            color: var(--c-text-ghost);
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ls-row {
+            display: grid;
+            grid-template-columns: 11ch 20ch 12ch 28ch 1fr;
+            gap: 1rem;
+            padding: 0.3rem 0.5rem;
+            margin: 0.2rem 0;
+            border-radius: 3px;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.2s ease;
+            align-items: center;
+        }
+
+        .ls-row:hover {
+            background: rgba(57,211,83,0.1);
+        }
+
+        .ls-perms { color: var(--c-text-ghost); }
+        .ls-meta { color: var(--c-text-ghost); }
+        .ls-date { color: var(--c-text-secondary); }
+        .ls-name { color: var(--c-text-primary); font-weight: 500; }
+
+        .ls-row:hover .ls-name {
+            color: var(--c-acid);
+            text-decoration: underline;
+        }
+
+        .ls-desc { color: var(--c-text-secondary); font-style: italic; }
+
+        .cursor-idle {
+            display: inline-block;
+            width: 8px;
+            height: 1.1em;
+            background: var(--c-acid);
+            animation: blink-cursor 1.2s step-end infinite;
+        }
+
+        @keyframes blink-cursor {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .docs-hint {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--c-text-ghost);
+            margin-top: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--c-void);
+            border-top: 1px solid var(--c-border);
+            padding: 4rem 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4rem;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .footer-copy {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--c-text-secondary);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        footer a {
+            color: var(--c-text-secondary);
+            text-decoration: none;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--c-acid);
+        }
+
+        .link-prefix {
+            color: var(--c-text-ghost);
+        }
+
+        .footer-meta {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--c-text-ghost);
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-dot {
+            color: var(--c-text-ghost);
+        }
+
+        /* Animations */
+        .bento-item {
+            opacity: 0;
+        }
+
+        .bento-item.visible {
+            animation: bento-in 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        .bento-a.visible { animation-delay: 0ms; }
+        .bento-b.visible { animation-delay: 100ms; }
+        .bento-c.visible { animation-delay: 200ms; }
+        .bento-d.visible { animation-delay: 300ms; }
+
+        @keyframes bento-in {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ls-row {
+            opacity: 0;
+        }
+
+        .terminal-window.visible .ls-row {
+            animation: row-appear 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        .terminal-window.visible .ls-row:nth-child(2) { animation-delay: 400ms; }
+        .terminal-window.visible .ls-row:nth-child(3) { animation-delay: 550ms; }
+        .terminal-window.visible .ls-row:nth-child(4) { animation-delay: 700ms; }
+        .terminal-window.visible .ls-row:nth-child(5) { animation-delay: 850ms; }
+        .terminal-window.visible .ls-row:nth-child(6) { animation-delay: 1000ms; }
+
+        @keyframes row-appear {
+            from {
+                opacity: 0;
+                transform: translateX(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .features {
+                padding: 4rem 2rem;
+            }
+
+            .features h2 {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+            }
+
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .bento-a { grid-column: 1; grid-row: 1; }
+            .bento-b { grid-column: 1; grid-row: 2; }
+            .bento-c { grid-column: 1; grid-row: 3; }
+            .bento-d { grid-column: 1; grid-row: 4; }
+
+            .bento-item {
+                min-height: 240px;
+                padding: 2rem;
+            }
+
+            .bento-d {
+                min-height: auto;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.5rem;
+            }
+
+            .ls-row {
+                grid-template-columns: 1fr;
+                gap: 0.3rem;
+            }
+
+            .ls-perms, .ls-meta, .ls-date {
+                display: none;
+            }
+
+            .terminal-window {
+                border-radius: 6px;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 2rem;
+            }
+
+            .command-box {
+                flex-direction: column;
+                align-items: flex-start;
+                font-size: 0.85rem;
+            }
+
+            .cta-button {
+                width: 100%;
+                text-align: center;
+            }
+
+            .bento-item h3 {
+                font-size: 1.1rem;
+            }
+
+            .bento-num {
+                font-size: 6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <svg viewBox="0 0 320 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:72px;width:auto;filter:drop-shadow(0 0 20px rgba(57,211,83,0.3))">
+            <rect x="4" y="8" width="48" height="48" rx="2" stroke="var(--c-text-primary)" stroke-width="1.5"/>
+            <polyline points="16,24 28,32 16,40" stroke="var(--c-text-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="miter" fill="none"/>
+            <line x1="32" y1="40" x2="40" y2="40" stroke="var(--c-text-primary)" stroke-width="2.5" stroke-linecap="round"/>
+            <text x="68" y="41" font-family="'Fragment Mono', monospace" font-size="28" font-weight="600" fill="var(--c-text-primary)">PuTTrY</text>
+        </svg>
+        <div class="tagline-wrapper">
+            Terminal sessions, <span class="typewriter" id="typewriter"></span>
+        </div>
+        <div style="position: relative; display: inline-block; margin-top: 0.5rem;">
+            <div class="command-box" onclick="copyCommand()">
+                <span class="command-text">npm install -g @chfischerx/puttry</span>
+                <svg class="copy-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </div>
+            <div class="copy-feedback" id="feedback">Copied!</div>
+        </div>
+        <div style="margin-top: 2.8rem; text-align: center;">
+            <p style="font-size: 0.9rem; color: var(--c-text-secondary); margin-bottom: 0.5rem;">
+                <a href="https://github.com/chfischerx/puttry" target="_blank" style="color: var(--c-acid); text-decoration: none; font-weight: 500;">GitHub Repository</a> • MIT License
+            </p>
+        </div>
+        <div class="scroll-hint">scroll</div>
+    </header>
+
+    <section class="features">
+        <div class="features-header">
+            <span class="features-label">// WHAT IS PuTTrY</span>
+            <h2>Your terminal.<br>Everywhere.</h2>
+            <p class="features-lead">A secure, browser-based SSH terminal that keeps sessions alive across every device and network.</p>
+        </div>
+        <div class="bento-grid">
+            <div class="bento-item bento-a">
+                <div class="bento-body">
+                    <h3>Session Persistence</h3>
+                    <p>Your terminal sessions stay alive across all your devices. Switch from your phone to laptop without losing your shell.</p>
+                </div>
+                <div class="bento-tag">persistence</div>
+            </div>
+            <div class="bento-item bento-b">
+                <div class="bento-body">
+                    <h3>Enterprise Security</h3>
+                    <p>Session password protected backend with optional 2FA. Passkeys (Touch ID, Face ID, Windows Hello) or TOTP authentication.
+                    <br><br>
+                    Central credential management—no key sprawl across devices. Phishing-resistant and instantly revocable. Rotate access instantly from anywhere with no client-side changes needed.</p>
+                </div>
+                <div class="bento-tag secure-tag">secure</div>
+            </div>
+            <div class="bento-item bento-c">
+                <div class="bento-body">
+                    <h3>Team Collaboration</h3>
+                    <p>Share terminal sessions with your team in real-time. Multiple viewers, one writer model keeps control.</p>
+                </div>
+                <div class="bento-tag">collaboration</div>
+            </div>
+            <div class="bento-item bento-d">
+                <div class="bento-body">
+                    <h3>Works Anywhere</h3>
+                    <p>Access your servers from any browser on any device. No SSH client installation required.</p>
+                </div>
+                <div class="bento-tag">universal</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="docs-section" id="docs">
+        <div class="terminal-window">
+            <div class="terminal-chrome">
+                <span class="chrome-dot chrome-red"></span>
+                <span class="chrome-dot chrome-yellow"></span>
+                <span class="chrome-dot chrome-green-dot"></span>
+                <span class="terminal-title">puttry — docs</span>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-prompt">
+                    <span class="p-user">user</span><span class="p-at">@</span><span class="p-host">puttry</span><span class="p-sep">:</span><span class="p-path">~/docs</span><span class="p-dollar">$</span><span class="p-cmd"> ls -la</span>
+                </div>
+                <div class="terminal-output">
+                    <div class="ls-header">total 5</div>
+                    <a href="/README" class="ls-row">
+                        <span class="ls-perms">-rw-r--r--</span>
+                        <span class="ls-meta">1 user staff 12K</span>
+                        <span class="ls-date">Mar 26 2025</span>
+                        <span class="ls-name">README.md</span>
+                        <span class="ls-desc">Full product overview and installation guide</span>
+                    </a>
+                    <a href="/USER_GUIDE" class="ls-row">
+                        <span class="ls-perms">-rw-r--r--</span>
+                        <span class="ls-meta">1 user staff 28K</span>
+                        <span class="ls-date">Mar 28 2025</span>
+                        <span class="ls-name">USER_GUIDE.md</span>
+                        <span class="ls-desc">Complete walkthrough of the web interface and features</span>
+                    </a>
+                    <a href="/NETWORK_SECURITY" class="ls-row">
+                        <span class="ls-perms">-rw-r--r--</span>
+                        <span class="ls-meta">1 user staff  8K</span>
+                        <span class="ls-date">Mar 26 2025</span>
+                        <span class="ls-name">NETWORK_SECURITY.md</span>
+                        <span class="ls-desc">Encryption, auth, and threat model</span>
+                    </a>
+                    <a href="/SECURITY_ARCHITECTURE" class="ls-row">
+                        <span class="ls-perms">-rw-r--r--</span>
+                        <span class="ls-meta">1 user staff 24K</span>
+                        <span class="ls-date">Mar 26 2025</span>
+                        <span class="ls-name">SECURITY_ARCHITECTURE.md</span>
+                        <span class="ls-desc">Security model and attack surface analysis</span>
+                    </a>
+                    <a href="/TECHNICAL_ARCHITECTURE" class="ls-row">
+                        <span class="ls-perms">-rw-r--r--</span>
+                        <span class="ls-meta">1 user staff 24K</span>
+                        <span class="ls-date">Mar 26 2025</span>
+                        <span class="ls-name">TECHNICAL_ARCHITECTURE.md</span>
+                        <span class="ls-desc">System design and implementation deep-dive</span>
+                    </a>
+                    <a href="/DEVELOPMENT" class="ls-row">
+                        <span class="ls-perms">-rw-r--r--</span>
+                        <span class="ls-meta">1 user staff  6K</span>
+                        <span class="ls-date">Mar 26 2025</span>
+                        <span class="ls-name">DEVELOPMENT.md</span>
+                        <span class="ls-desc">Dev environment setup and contribution guide</span>
+                    </a>
+                    <a href="/PRODUCTION" class="ls-row">
+                        <span class="ls-perms">-rw-r--r--</span>
+                        <span class="ls-meta">1 user staff 16K</span>
+                        <span class="ls-date">Mar 26 2025</span>
+                        <span class="ls-name">PRODUCTION.md</span>
+                        <span class="ls-desc">Deployment and scaling best practices</span>
+                    </a>
+                </div>
+                <div class="terminal-prompt terminal-prompt--idle">
+                    <span class="p-user">user</span><span class="p-at">@</span><span class="p-host">puttry</span><span class="p-sep">:</span><span class="p-path">~/docs</span><span class="p-dollar">$</span><span class="cursor-idle"></span>
+                </div>
+            </div>
+        </div>
+        <p class="docs-hint">// click any file to open documentation</p>
+    </section>
+
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-left">
+                <p class="footer-copy">Made with <span style="color:var(--c-acid)">⚡</span> by Christian Fischer</p>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/chfischerx/puttry" target="_blank"><span class="link-prefix">~/</span>github</a>
+                <a href="https://www.npmjs.com/package/@chfischerx/puttry" target="_blank"><span class="link-prefix">~/</span>npm</a>
+            </div>
+        </div>
+        <div class="footer-meta">
+            <span>// open source — MIT license</span>
+            <span class="footer-dot">·</span>
+            <span>puttry.io</span>
+        </div>
+    </footer>
+
+    <script>
+        // Typewriter animation
+        const typewriterElement = document.getElementById('typewriter');
+        const text = 'anywhere, anytime.';
+        let index = 0;
+
+        function typewriter() {
+            if (index < text.length) {
+                typewriterElement.textContent += text[index];
+                index++;
+                setTimeout(typewriter, 80);
+            }
+        }
+
+        // Start typewriter on page load
+        window.addEventListener('load', typewriter);
+
+        // Copy to clipboard function
+        function copyCommand() {
+            const command = 'npm install -g @chfischerx/puttry';
+            function showFeedback() {
+                const feedback = document.getElementById('feedback');
+                feedback.classList.remove('show');
+                void feedback.offsetWidth; // force reflow to restart animation
+                feedback.classList.add('show');
+                setTimeout(() => feedback.classList.remove('show'), 2000);
+            }
+            navigator.clipboard.writeText(command).then(showFeedback).catch(err => {
+                const textarea = document.createElement('textarea');
+                textarea.value = command;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showFeedback();
+            });
+        }
+
+        // Bento intersection observer
+        const bentoObs = new IntersectionObserver(entries => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.05 });
+        document.querySelectorAll('.bento-item').forEach(el => bentoObs.observe(el));
+
+        // Terminal window intersection observer
+        const termObs = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.style.animationPlayState = 'running';
+                    e.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+        const termWin = document.querySelector('.terminal-window');
+        if (termWin) termObs.observe(termWin);
+    </script>
+</body>
+</html>
