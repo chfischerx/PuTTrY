@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, createRef } from 'react'
-import { LogOut, Loader2, Settings, Smartphone, Info, Eye, EyeOff, KeyRound, FolderOpen, Upload, Menu, MoreHorizontal, X, Ban } from 'lucide-react'
+import { LogOut, Loader2, Settings, Smartphone, Info, Eye, EyeOff, KeyRound, FolderOpen, Upload, Menu, MoreHorizontal, X, Ban, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SessionsSidebar, type SessionInfo } from '@/components/SessionsSidebar'
 import { SettingsDialog } from '@/components/SettingsDialog'
@@ -64,6 +64,9 @@ export default function App() {
   const [viewportHeight, setViewportHeight] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
   const [isShiftPressed, setIsShiftPressed] = useState(false)
+
+  // Search state
+  const [searchOpen, setSearchOpen] = useState(false)
 
   // Input lock management
   const clientId = useRef(getClientId())
@@ -306,6 +309,21 @@ export default function App() {
       document.removeEventListener('keyup', handleKeyUp)
     }
   }, [isMobile])
+
+  // Global Ctrl+F handler for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'f' && !e.shiftKey && !e.altKey && !e.metaKey) {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   // Detect mobile with matchMedia
   useEffect(() => {
@@ -1242,6 +1260,18 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
+                    setSearchOpen(true)
+                    setMobileMenuOpen(false)
+                  }}
+                  className="w-full px-4 py-3 text-left rounded-md bg-muted/30 hover:bg-muted transition-colors flex items-center gap-3">
+                  <Search className="h-5 w-5 flex-shrink-0" />
+                  <span className="text-base">Find in Terminal</span>
+                </button>
+              )}
+              {authStatus === 'authenticated' && activeSessionId && (
+                <button
+                  type="button"
+                  onClick={() => {
                     handleShowProcessInfo()
                     setMobileMenuOpen(false)
                   }}
@@ -1428,6 +1458,17 @@ export default function App() {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => setSearchOpen(true)}
+                className="[&_svg]:size-4"
+                title="Find in terminal (Ctrl+F)"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
+            {authStatus === 'authenticated' && activeSessionId && !isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleShowProcessInfo}
                 disabled={processInfoLoading}
                 className="[&_svg]:size-4"
@@ -1575,6 +1616,9 @@ export default function App() {
               lockHeldBy={inputLocks[session.id] ?? null}
               scrollbackLines={scrollbackLines}
               fontSize={fontSize}
+              searchOpen={searchOpen && activeSessionId === session.id}
+              onSearchClose={() => setSearchOpen(false)}
+              onSearchOpen={() => setSearchOpen(true)}
               onReadOnlyInput={(lockHeldBy) => {
                 const message = lockHeldBy
                   ? `Terminal locked by another browser with Session ID: ${lockHeldBy.split('-').pop()}`

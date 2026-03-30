@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
+import { SearchAddon } from '@xterm/addon-search'
+import { TerminalSearchBar, type SearchOptions } from './TerminalSearchBar'
 import '@xterm/xterm/css/xterm.css'
 
 // Minimal scrollbar styling
@@ -21,6 +23,9 @@ interface TerminalPaneProps {
   scrollbackLines?: number
   fontSize?: number
   onReadOnlyInput?: (lockHeldBy: string | null) => void
+  searchOpen?: boolean
+  onSearchClose?: () => void
+  onSearchOpen?: () => void
 }
 
 export interface TerminalPaneHandle {
@@ -33,12 +38,13 @@ export interface TerminalPaneHandle {
 }
 
 // Global terminal cache to preserve instances across session switches
-const terminalCache = new Map<string, { terminal: Terminal; fitAddon: FitAddon }>()
+const terminalCache = new Map<string, { terminal: Terminal; fitAddon: FitAddon; searchAddon: SearchAddon }>()
 
-const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessionId, isActive, clientId, lockHeldBy, scrollbackLines = 10000, fontSize = 14, onReadOnlyInput }, ref) => {
+const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessionId, isActive, clientId, lockHeldBy, scrollbackLines = 10000, fontSize = 14, onReadOnlyInput, searchOpen = false, onSearchClose, onSearchOpen }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<Terminal | null>(null)
   const fitAddonRef = useRef<FitAddon | null>(null)
+  const searchAddonRef = useRef<SearchAddon | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
   const dataDisposableRef = useRef<{ dispose: () => void } | null>(null)
@@ -102,8 +108,9 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     let cached = terminalCache.get(sessionId)
     let term = cached?.terminal
     let fitAddon = cached?.fitAddon
+    let searchAddon = cached?.searchAddon
 
-    if (!term || !fitAddon) {
+    if (!term || !fitAddon || !searchAddon) {
       // Create terminal
       term = new Terminal({
         cursorBlink: true,
@@ -113,18 +120,24 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
           foreground: '#d4d4d4',
         },
         scrollback: scrollbackLines,
+        allowProposedApi: true,
       })
 
       // Install FitAddon
       fitAddon = new FitAddon()
       term.loadAddon(fitAddon)
 
+      // Install SearchAddon
+      searchAddon = new SearchAddon()
+      term.loadAddon(searchAddon)
+
       // Cache the terminal
-      terminalCache.set(sessionId, { terminal: term, fitAddon })
+      terminalCache.set(sessionId, { terminal: term, fitAddon, searchAddon })
     }
 
     terminalRef.current = term
     fitAddonRef.current = fitAddon
+    searchAddonRef.current = searchAddon
 
     // Terminal opening is deferred to when it becomes active (see visibility effect)
     // This ensures proper dimension calculations for fit()
@@ -362,6 +375,21 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     }
   }, [lockHeldBy, isActive, hasLock])
 
+  // Handle Ctrl+F for search
+  useEffect(() => {
+    const term = terminalRef.current
+    if (!term || !isActive) return
+
+    term.attachCustomKeyEventHandler((e) => {
+      if (e.ctrlKey && e.key === 'f' && !e.shiftKey && !e.altKey && !e.metaKey) {
+        e.preventDefault()
+        onSearchOpen?.()
+        return false
+      }
+      return true
+    })
+  }, [isActive, onSearchOpen])
+
   // Cleanup terminal when component unmounts (session is removed)
   useEffect(() => {
     return () => {
@@ -373,6 +401,38 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     }
   }, [sessionId])
 
+  const handleFindNext = (term: string, opts: SearchOptions) => {
+    const searchAddon = searchAddonRef.current
+    if (!searchAddon || !term) return
+    searchAddon.findNext(term, {
+      ...opts,
+      decorations: {
+        matchBackground: '#ffff00',
+        matchBorder: '#ffff00',
+        activeMatchBackground: '#ff8800',
+        activeMatchBorder: '#ff8800',
+        matchOverviewRuler: '#ffff00',
+        activeMatchColorOverviewRuler: '#ff8800',
+      },
+    })
+  }
+
+  const handleFindPrevious = (term: string, opts: SearchOptions) => {
+    const searchAddon = searchAddonRef.current
+    if (!searchAddon || !term) return
+    searchAddon.findPrevious(term, {
+      ...opts,
+      decorations: {
+        matchBackground: '#ffff00',
+        matchBorder: '#ffff00',
+        activeMatchBackground: '#ff8800',
+        activeMatchBorder: '#ff8800',
+        matchOverviewRuler: '#ffff00',
+        activeMatchColorOverviewRuler: '#ff8800',
+      },
+    })
+  }
+
   return (
     <div
       ref={containerRef}
@@ -383,7 +443,15 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
         overflow: 'hidden',
         position: 'relative',
       }}
-    />
+    >
+      {searchOpen && (
+        <TerminalSearchBar
+          onFindNext={handleFindNext}
+          onFindPrevious={handleFindPrevious}
+          onClose={onSearchClose || (() => {})}
+        />
+      )}
+    </div>
   )
 })
 
