@@ -111,9 +111,18 @@ export function TerminalSearchBar({
     }
   }, [query, regex, caseSensitive, wholeWord, onFindNext])
 
+  const decorations = {
+    matchBackground: '#ffff00',
+    matchBorder: '#ffff00',
+    activeMatchBackground: '#ffff00',
+    activeMatchBorder: '#ffff00',
+    matchOverviewRuler: '#ffff00',
+    activeMatchColorOverviewRuler: '#ffff00',
+  }
+
   return (
-    <div className="absolute top-0 right-0 z-50 m-2 bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex flex-col md:flex-row md:items-center gap-2 w-fit md:max-w-md">
-      {/* Top row: input and controls */}
+    <div className="absolute top-0 right-0 z-50 m-2 bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex items-center gap-2 max-w-md">
+      {/* Search input and controls */}
       <div className="flex items-center gap-2">
         {/* Search input */}
         <input
@@ -135,7 +144,7 @@ export function TerminalSearchBar({
         )}
 
         {/* Separator */}
-        <div className="hidden md:block w-px h-6 bg-slate-700" />
+        <div className="w-px h-6 bg-slate-700" />
 
         {/* Regex toggle */}
         <button
@@ -165,20 +174,20 @@ export function TerminalSearchBar({
         </button>
 
         {/* Separator */}
-        <div className="hidden md:block w-px h-6 bg-slate-700" />
+        <div className="w-px h-6 bg-slate-700" />
 
         {/* Close button */}
         <button
           onClick={onClose}
-          className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 transition-colors ml-auto md:ml-0"
+          className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 transition-colors"
           title="Close search (Esc)"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      {/* Bottom row (mobile only): navigation buttons */}
-      <div className="flex md:hidden gap-2 justify-center">
+      {/* Navigation buttons (vertical stack on right) */}
+      <div className="flex flex-col gap-0.5">
         {/* Previous match button */}
         <button
           onClick={() =>
@@ -187,73 +196,11 @@ export function TerminalSearchBar({
               caseSensitive,
               wholeWord,
               incremental: false,
-              decorations: {
-                matchBackground: '#ffff00',
-                matchBorder: '#ffff00',
-                activeMatchBackground: '#ffff00',
-                activeMatchBorder: '#ffff00',
-                matchOverviewRuler: '#ffff00',
-                activeMatchColorOverviewRuler: '#ffff00',
-              },
+              decorations,
             })
           }
           disabled={!query}
-          className="p-1.5 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors flex flex-col items-center gap-0.5"
-          title="Find previous (↑)"
-        >
-          <ChevronUp className="h-5 w-5" />
-          <span className="text-xs">Prev</span>
-        </button>
-
-        {/* Next match button */}
-        <button
-          onClick={() =>
-            onFindNext(query, {
-              regex,
-              caseSensitive,
-              wholeWord,
-              incremental: false,
-              decorations: {
-                matchBackground: '#ffff00',
-                matchBorder: '#ffff00',
-                activeMatchBackground: '#ffff00',
-                activeMatchBorder: '#ffff00',
-                matchOverviewRuler: '#ffff00',
-                activeMatchColorOverviewRuler: '#ffff00',
-              },
-            })
-          }
-          disabled={!query}
-          className="p-1.5 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors flex flex-col items-center gap-0.5"
-          title="Find next (↓ or Enter)"
-        >
-          <ChevronDown className="h-5 w-5" />
-          <span className="text-xs">Next</span>
-        </button>
-      </div>
-
-      {/* Desktop only: inline navigation buttons */}
-      <div className="hidden md:flex md:gap-2">
-        {/* Previous match button */}
-        <button
-          onClick={() =>
-            onFindPrevious(query, {
-              regex,
-              caseSensitive,
-              wholeWord,
-              incremental: false,
-              decorations: {
-                matchBackground: '#ffff00',
-                matchBorder: '#ffff00',
-                activeMatchBackground: '#ffff00',
-                activeMatchBorder: '#ffff00',
-                matchOverviewRuler: '#ffff00',
-                activeMatchColorOverviewRuler: '#ffff00',
-              },
-            })
-          }
-          disabled={!query}
-          className="text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
+          className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
           title="Find previous (↑)"
         >
           <ChevronUp className="h-4 w-4" />
@@ -267,18 +214,11 @@ export function TerminalSearchBar({
               caseSensitive,
               wholeWord,
               incremental: false,
-              decorations: {
-                matchBackground: '#ffff00',
-                matchBorder: '#ffff00',
-                activeMatchBackground: '#ffff00',
-                activeMatchBorder: '#ffff00',
-                matchOverviewRuler: '#ffff00',
-                activeMatchColorOverviewRuler: '#ffff00',
-              },
+              decorations,
             })
           }
           disabled={!query}
-          className="text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
+          className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
           title="Find next (↓ or Enter)"
         >
           <ChevronDown className="h-4 w-4" />
