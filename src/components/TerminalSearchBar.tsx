@@ -130,7 +130,7 @@ export function TerminalSearchBar({
           })
         }
         disabled={!query}
-        className="p-1.5 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
+        className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
         title="Find previous (Shift+Enter)"
       >
         <ChevronUp className="h-4 w-4" />
@@ -155,7 +155,7 @@ export function TerminalSearchBar({
           })
         }
         disabled={!query}
-        className="p-1.5 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
+        className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
         title="Find next (Enter)"
       >
         <ChevronDown className="h-4 w-4" />
@@ -167,7 +167,7 @@ export function TerminalSearchBar({
       {/* Regex toggle */}
       <button
         onClick={() => setRegex(!regex)}
-        className={`p-1.5 text-xs transition-colors ${regex ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
+        className={`p-1.5 md:p-0 text-xs transition-colors ${regex ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
         title="Toggle regex mode"
       >
         .*
@@ -176,7 +176,7 @@ export function TerminalSearchBar({
       {/* Case sensitive toggle */}
       <button
         onClick={() => setCaseSensitive(!caseSensitive)}
-        className={`p-1.5 text-xs transition-colors ${caseSensitive ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
+        className={`p-1.5 md:p-0 text-xs transition-colors ${caseSensitive ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
         title="Toggle case sensitive"
       >
         Aa
@@ -185,7 +185,7 @@ export function TerminalSearchBar({
       {/* Whole word toggle */}
       <button
         onClick={() => setWholeWord(!wholeWord)}
-        className={`p-1.5 transition-colors ${wholeWord ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
+        className={`p-1.5 md:p-0 transition-colors ${wholeWord ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
         title="Toggle whole word"
       >
         <Type className="h-3 w-3" />
@@ -197,7 +197,7 @@ export function TerminalSearchBar({
       {/* Close button */}
       <button
         onClick={onClose}
-        className="p-1.5 text-slate-400 hover:text-slate-100 transition-colors"
+        className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 transition-colors"
         title="Close search (Esc)"
       >
         <X className="h-4 w-4" />
