@@ -1,6 +1,6 @@
 {
   "name": "@chfischerx/puttry",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "PuTTrY - Web-based terminal with real PTY, WebSocket I/O, and xterm.js frontend",
   "type": "module",
   "author": "Christian Fischer <christian@fischerx.com>",
@@ -12,7 +12,8 @@
   "files": [
     "dist-server/",
     "dist/",
-    ".env.example"
+    ".env.example",
+    "README.md"
   ],
   "scripts": {
     "dev": "vite",
