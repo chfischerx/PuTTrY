@@ -124,10 +124,10 @@ export function TerminalSearchBar({
             decorations: {
               matchBackground: '#ffff00',
               matchBorder: '#ffff00',
-              activeMatchBackground: '#ff8800',
-              activeMatchBorder: '#ff8800',
+              activeMatchBackground: '#ffff00',
+              activeMatchBorder: '#ffff00',
               matchOverviewRuler: '#ffff00',
-              activeMatchColorOverviewRuler: '#ff8800',
+              activeMatchColorOverviewRuler: '#ffff00',
             },
           })
         }
@@ -150,10 +150,10 @@ export function TerminalSearchBar({
             decorations: {
               matchBackground: '#ffff00',
               matchBorder: '#ffff00',
-              activeMatchBackground: '#ff8800',
-              activeMatchBorder: '#ff8800',
+              activeMatchBackground: '#ffff00',
+              activeMatchBorder: '#ffff00',
               matchOverviewRuler: '#ffff00',
-              activeMatchColorOverviewRuler: '#ff8800',
+              activeMatchColorOverviewRuler: '#ffff00',
             },
           })
         }
