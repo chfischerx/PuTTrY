@@ -43,7 +43,15 @@ export function TerminalSearchBar({
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle if search bar is focused or visible
+      const decorations = {
+        matchBackground: '#ffff00',
+        matchBorder: '#ffff00',
+        activeMatchBackground: '#ffff00',
+        activeMatchBorder: '#ffff00',
+        matchOverviewRuler: '#ffff00',
+        activeMatchColorOverviewRuler: '#ffff00',
+      }
+
       if (e.key === 'Escape') {
         e.preventDefault()
         onClose()
@@ -54,12 +62,25 @@ export function TerminalSearchBar({
           caseSensitive,
           wholeWord,
           incremental: false,
-          decorations: {
-            matchBackground: '#ffff00',
-            matchBorder: '#ffff00',
-            activeMatchBackground: '#ff8800',
-            activeMatchBorder: '#ff8800',
-          },
+          decorations,
+        })
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        onFindNext(query, {
+          regex,
+          caseSensitive,
+          wholeWord,
+          incremental: false,
+          decorations,
+        })
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        onFindPrevious(query, {
+          regex,
+          caseSensitive,
+          wholeWord,
+          incremental: false,
+          decorations,
         })
       }
     }
@@ -68,7 +89,7 @@ export function TerminalSearchBar({
     return () => {
       inputRef.current?.removeEventListener('keydown', handleKeyDown)
     }
-  }, [query, regex, caseSensitive, wholeWord, onFindNext, onClose])
+  }, [query, regex, caseSensitive, wholeWord, onFindNext, onFindPrevious, onClose])
 
   // Live search as user types (incremental)
   useEffect(() => {
@@ -81,10 +102,10 @@ export function TerminalSearchBar({
         decorations: {
           matchBackground: '#ffff00',
           matchBorder: '#ffff00',
-          activeMatchBackground: '#ff8800',
-          activeMatchBorder: '#ff8800',
+          activeMatchBackground: '#ffff00',
+          activeMatchBorder: '#ffff00',
           matchOverviewRuler: '#ffff00',
-          activeMatchColorOverviewRuler: '#ff8800',
+          activeMatchColorOverviewRuler: '#ffff00',
         },
       })
     }
@@ -131,7 +152,7 @@ export function TerminalSearchBar({
         }
         disabled={!query}
         className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
-        title="Find previous (Shift+Enter)"
+        title="Find previous (↑)"
       >
         <ChevronUp className="h-4 w-4" />
       </button>
@@ -156,7 +177,7 @@ export function TerminalSearchBar({
         }
         disabled={!query}
         className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
-        title="Find next (Enter)"
+        title="Find next (↓ or Enter)"
       >
         <ChevronDown className="h-4 w-4" />
       </button>
