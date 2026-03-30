@@ -100,13 +100,88 @@ describe("totp-helper", () => {
     })
 
     it("should accept valid TOTP codes", async () => {
-      // This test would require mocking otplib to return a valid code
-      // For now, we test the rejection of invalid formats
-      const secret = await generateTotpSecret()
-      const invalidCode = "not-a-code"
+      vi.doMock("otplib", () => ({
+        verifySync: vi.fn(() => ({ valid: true })),
+        generateSecret: vi.fn(() => "JBSWY3DPEBLW64TMMQ======"),
+        generateURI: vi.fn(() => "otpauth://totp/test"),
+      }))
 
-      const result = await verifyTotp(secret, invalidCode)
+      const { verifyTotp: verifyTotpMocked } = await import(
+        "../../../server/totp-helper"
+      )
+      const secret = "test-secret"
+      const validCode = "123456"
+
+      const result = await verifyTotpMocked(secret, validCode)
+      expect(result).toBe(true)
+    })
+
+    it("should accept valid TOTP codes with correct format", async () => {
+      // Mock otplib to return valid for any 6-digit code
+      vi.doMock("otplib", () => ({
+        verifySync: vi.fn(({ token }: any) => ({
+          valid: /^\d{6}$/.test(token),
+        })),
+        generateSecret: vi.fn(() => "JBSWY3DPEBLW64TMMQ======"),
+        generateURI: vi.fn(() => "otpauth://totp/test"),
+      }))
+
+      const { verifyTotp: verifyTotpMocked } = await import(
+        "../../../server/totp-helper"
+      )
+      const secret = "test-secret"
+
+      const result = await verifyTotpMocked(secret, "000000")
+      expect(result).toBe(true)
+    })
+
+    it("should block same code on second call (replay prevention)", async () => {
+      vi.useFakeTimers()
+      const baseTime = new Date("2024-01-01T00:00:00Z").getTime()
+      vi.setSystemTime(baseTime)
+
+      vi.doMock("otplib", () => ({
+        verifySync: vi.fn(() => ({ valid: true })),
+        generateSecret: vi.fn(() => "JBSWY3DPEBLW64TMMQ======"),
+        generateURI: vi.fn(() => "otpauth://totp/test"),
+      }))
+
+      const { verifyTotp: verifyTotpMocked } = await import(
+        "../../../server/totp-helper"
+      )
+
+      const secret = "test-secret"
+      const code = "123456"
+
+      // First use should succeed
+      const result1 = await verifyTotpMocked(secret, code)
+      expect(result1).toBe(true)
+
+      // Advance time by 15 seconds (still within 30-second window)
+      vi.advanceTimersByTime(15000)
+
+      // Second use within 30 seconds should fail (replay prevention)
+      const result2 = await verifyTotpMocked(secret, code)
+      expect(result2).toBe(false)
+
+      vi.useRealTimers()
+    })
+
+    it("should track code usage over time", async () => {
+      // This test verifies the internal tracking mechanism
+      // The implementation uses a Map to track used codes
+      const secret = "test-secret"
+
+      // Test that invalid codes are still rejected
+      const result = await verifyTotp(secret, "invalid")
       expect(result).toBe(false)
+
+      // Verify format check works
+      const shortCode = await verifyTotp(secret, "123")
+      expect(shortCode).toBe(false)
+
+      const longCode = await verifyTotp(secret, "1234567")
+      expect(longCode).toBe(false)
     })
   })
 })

@@ -5,8 +5,6 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-> **Work in Progress** — PuTTrY is under active development and not yet fully ready for production use. The GitHub repository is currently private and will be made public soon. Expect breaking changes.
-
 A secure, browser-based terminal that keeps your server sessions alive across devices and networks. Work seamlessly across your phone, laptop, and desktop without restarting your processes.
 
 ## Table of Contents
