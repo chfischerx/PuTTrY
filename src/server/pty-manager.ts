@@ -186,43 +186,50 @@ export function attachWebSocket(id: string, ws: WebSocket, clientId: string = ""
 
   // Handle WebSocket messages
   ws.on("message", (data) => {
-    try {
-      // Try to parse as JSON for control messages
-      const message = JSON.parse(data.toString()) as ResizeMessage & { type: string; force?: boolean }
-      if (message.type === "resize") {
-        // Validate and clamp cols/rows to reasonable bounds
-        const cols = Math.max(1, Math.min(500, Number(message.cols) || 80))
-        const rows = Math.max(1, Math.min(500, Number(message.rows) || 24))
-        session.pty.resize(cols, rows)
-        session.cols = cols
-        session.rows = rows
-      } else if (message.type === "acquire-lock") {
-        const force = !!message.force
-        const wasHeld = session.inputLockClientId
-        if (force || !session.inputLockClientId || session.inputLockClientId === clientId) {
-          session.inputLockClientId = clientId
-          broadcastSync({ type: "input-lock-acquired", sessionId: id, clientId })
-          logger.info(`[pty-manager] Lock acquired for session ${id} by ${clientId} (force=${force}, wasHeld=${wasHeld})`)
-        } else {
-          logger.info(`[pty-manager] Lock denied for session ${id} by ${clientId} (held by ${session.inputLockClientId})`)
+    const dataStr = data.toString()
+    // Only try to parse as JSON for control messages (all start with '{')
+    // Digits 0-9 are valid JSON, causing them to be silently dropped
+    if (dataStr.startsWith('{')) {
+      try {
+        const message = JSON.parse(dataStr) as ResizeMessage & { type: string; force?: boolean }
+        if (message.type === "resize") {
+          // Validate and clamp cols/rows to reasonable bounds
+          const cols = Math.max(1, Math.min(500, Number(message.cols) || 80))
+          const rows = Math.max(1, Math.min(500, Number(message.rows) || 24))
+          session.pty.resize(cols, rows)
+          session.cols = cols
+          session.rows = rows
+        } else if (message.type === "acquire-lock") {
+          const force = !!message.force
+          const wasHeld = session.inputLockClientId
+          if (force || !session.inputLockClientId || session.inputLockClientId === clientId) {
+            session.inputLockClientId = clientId
+            broadcastSync({ type: "input-lock-acquired", sessionId: id, clientId })
+            logger.info(`[pty-manager] Lock acquired for session ${id} by ${clientId} (force=${force}, wasHeld=${wasHeld})`)
+          } else {
+            logger.info(`[pty-manager] Lock denied for session ${id} by ${clientId} (held by ${session.inputLockClientId})`)
+          }
+        } else if (message.type === "release-lock") {
+          if (session.inputLockClientId === clientId) {
+            session.inputLockClientId = null
+            broadcastSync({ type: "input-lock-released", sessionId: id })
+          }
         }
-      } else if (message.type === "release-lock") {
-        if (session.inputLockClientId === clientId) {
-          session.inputLockClientId = null
-          broadcastSync({ type: "input-lock-released", sessionId: id })
-        }
+        return
+      } catch {
+        // Malformed JSON, fall through and treat as raw input
       }
-    } catch {
-      // Not JSON, treat as raw input (keystrokes)
-      if (session.inputLockClientId === clientId) {
-        // HIGH-9: Enforce maximum input size to prevent memory exhaustion
-        const input = data.toString()
-        if (input.length > MAX_PTY_INPUT_SIZE) {
-          logger.warn(`[pty-manager] Input exceeds maximum size (${input.length} > ${MAX_PTY_INPUT_SIZE}), truncating`)
-          session.pty.write(input.slice(0, MAX_PTY_INPUT_SIZE))
-        } else {
-          session.pty.write(input)
-        }
+    }
+
+    // Treat as raw input (keystrokes)
+    if (session.inputLockClientId === clientId) {
+      // HIGH-9: Enforce maximum input size to prevent memory exhaustion
+      const input = dataStr
+      if (input.length > MAX_PTY_INPUT_SIZE) {
+        logger.warn(`[pty-manager] Input exceeds maximum size (${input.length} > ${MAX_PTY_INPUT_SIZE}), truncating`)
+        session.pty.write(input.slice(0, MAX_PTY_INPUT_SIZE))
+      } else {
+        session.pty.write(input)
       }
     }
   })

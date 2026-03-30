@@ -260,15 +260,20 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
 
     ws.onmessage = (event) => {
       if (typeof event.data === 'string') {
-        try {
-          const msg = JSON.parse(event.data)
-          if (msg.type === 'exit') {
-            term.write('\r\n[Process exited]')
+        // Only try to parse as JSON if message starts with '{' (control messages)
+        // All digits 0-9 are valid JSON, causing silent drops when parsed
+        if (event.data.startsWith('{')) {
+          try {
+            const msg = JSON.parse(event.data)
+            if (msg.type === 'exit') {
+              term.write('\r\n[Process exited]')
+            }
+            return
+          } catch {
+            // Malformed JSON, fall through and treat as output
           }
-        } catch {
-          // Not JSON, treat as output
-          term.write(event.data)
         }
+        term.write(event.data)
       } else {
         // Binary data
         const view = new Uint8Array(event.data)
