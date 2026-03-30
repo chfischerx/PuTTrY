@@ -427,8 +427,8 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     searchAddon.findNext(term, {
       ...opts,
       decorations: {
-        matchBackground: '#ffff00',
-        matchBorder: '#ffff00',
+        matchBackground: 'transparent',
+        matchBorder: '#ff8800',
         activeMatchBackground: '#ffff00',
         activeMatchBorder: '#ffff00',
         matchOverviewRuler: '#ffff00',
@@ -443,8 +443,8 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     searchAddon.findPrevious(term, {
       ...opts,
       decorations: {
-        matchBackground: '#ffff00',
-        matchBorder: '#ffff00',
+        matchBackground: 'transparent',
+        matchBorder: '#ff8800',
         activeMatchBackground: '#ffff00',
         activeMatchBorder: '#ffff00',
         matchOverviewRuler: '#ffff00',

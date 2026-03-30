@@ -44,8 +44,8 @@ export function TerminalSearchBar({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const decorations = {
-        matchBackground: '#ffff00',
-        matchBorder: '#ffff00',
+        matchBackground: 'transparent',
+        matchBorder: '#ff8800',
         activeMatchBackground: '#ffff00',
         activeMatchBorder: '#ffff00',
         matchOverviewRuler: '#ffff00',
@@ -100,8 +100,8 @@ export function TerminalSearchBar({
         wholeWord,
         incremental: true,
         decorations: {
-          matchBackground: '#ffff00',
-          matchBorder: '#ffff00',
+          matchBackground: 'transparent',
+          matchBorder: '#ff8800',
           activeMatchBackground: '#ffff00',
           activeMatchBorder: '#ffff00',
           matchOverviewRuler: '#ffff00',
@@ -112,8 +112,8 @@ export function TerminalSearchBar({
   }, [query, regex, caseSensitive, wholeWord, onFindNext])
 
   const decorations = {
-    matchBackground: '#ffff00',
-    matchBorder: '#ffff00',
+    matchBackground: 'transparent',
+    matchBorder: '#ff8800',
     activeMatchBackground: '#ffff00',
     activeMatchBorder: '#ffff00',
     matchOverviewRuler: '#ffff00',
