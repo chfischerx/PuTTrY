@@ -546,7 +546,7 @@ export default function App() {
       if (res.ok) {
         const data = (await res.json()) as { dataUrl: string }
         setTotpQrDataUrl(data.dataUrl)
-        setTotpManualKey(null) // HIGH-3: Secret is no longer returned to client
+        setTotpManualKey('') // HIGH-3: Secret is no longer returned to client
       } else {
         setAuthError('Failed to generate QR code')
       }
