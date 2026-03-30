@@ -126,7 +126,6 @@ describe("passkey-state", () => {
 
   describe("deletePasskey", () => {
     it("should not throw on delete", () => {
-      const key1 = createMockPasskey("key1")
       expect(() => deletePasskey("key1")).not.toThrow()
     })
 

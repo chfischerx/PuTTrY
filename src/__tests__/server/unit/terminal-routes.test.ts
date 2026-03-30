@@ -7,7 +7,7 @@ import request from "supertest"
 let mockSessions = new Map<string, any>()
 
 vi.mock("../../../server/pty-manager.js", () => ({
-  createSession: vi.fn((cols: number, rows: number, clientId: any) => {
+  createSession: vi.fn((cols: number, rows: number, _clientId: any) => {
     const id = `session-${Date.now()}-${Math.random().toString(36).slice(2)}`
     const session = {
       id,

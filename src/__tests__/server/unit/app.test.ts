@@ -61,11 +61,7 @@ vi.mock("../../../server/settings-api.js", () => ({
 import { createApp } from "../../../server/app"
 
 describe("app", () => {
-  const noOpLimiter: RateLimitRequestHandler = (
-    _req,
-    _res,
-    next
-  ) => next()
+  const noOpLimiter = ((_req: any, _res: any, next: any) => next()) as any as RateLimitRequestHandler
 
   const createMockConfig = () => ({
     AUTH_DISABLED: false,
