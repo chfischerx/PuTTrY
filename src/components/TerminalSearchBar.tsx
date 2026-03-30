@@ -112,117 +112,178 @@ export function TerminalSearchBar({
   }, [query, regex, caseSensitive, wholeWord, onFindNext])
 
   return (
-    <div className="absolute top-0 right-0 z-50 m-2 bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex items-center gap-2 max-w-md">
-      {/* Search input */}
-      <input
-        ref={inputRef}
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Find in terminal..."
-        className="px-2 py-1 text-sm rounded border border-slate-700 bg-slate-800 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40"
-      />
+    <div className="absolute top-0 right-0 z-50 m-2 bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex flex-col md:flex-row md:items-center gap-2 w-fit md:max-w-md">
+      {/* Top row: input and controls */}
+      <div className="flex items-center gap-2">
+        {/* Search input */}
+        <input
+          ref={inputRef}
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Find in terminal..."
+          className="px-2 py-1 text-sm rounded border border-slate-700 bg-slate-800 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40"
+        />
 
-      {/* Match count */}
-      {searchResult && query && (
-        <span className="text-xs text-slate-400 whitespace-nowrap">
-          {searchResult.resultIndex === -1
-            ? '> 1000'
-            : `${searchResult.resultIndex + 1} / ${searchResult.resultCount}`}
-        </span>
-      )}
+        {/* Match count */}
+        {searchResult && query && (
+          <span className="text-xs text-slate-400 whitespace-nowrap">
+            {searchResult.resultIndex === -1
+              ? '> 1000'
+              : `${searchResult.resultIndex + 1} / ${searchResult.resultCount}`}
+          </span>
+        )}
 
-      {/* Previous match button */}
-      <button
-        onClick={() =>
-          onFindPrevious(query, {
-            regex,
-            caseSensitive,
-            wholeWord,
-            incremental: false,
-            decorations: {
-              matchBackground: '#ffff00',
-              matchBorder: '#ffff00',
-              activeMatchBackground: '#ffff00',
-              activeMatchBorder: '#ffff00',
-              matchOverviewRuler: '#ffff00',
-              activeMatchColorOverviewRuler: '#ffff00',
-            },
-          })
-        }
-        disabled={!query}
-        className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
-        title="Find previous (↑)"
-      >
-        <ChevronUp className="h-4 w-4" />
-      </button>
+        {/* Separator */}
+        <div className="hidden md:block w-px h-6 bg-slate-700" />
 
-      {/* Next match button */}
-      <button
-        onClick={() =>
-          onFindNext(query, {
-            regex,
-            caseSensitive,
-            wholeWord,
-            incremental: false,
-            decorations: {
-              matchBackground: '#ffff00',
-              matchBorder: '#ffff00',
-              activeMatchBackground: '#ffff00',
-              activeMatchBorder: '#ffff00',
-              matchOverviewRuler: '#ffff00',
-              activeMatchColorOverviewRuler: '#ffff00',
-            },
-          })
-        }
-        disabled={!query}
-        className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
-        title="Find next (↓ or Enter)"
-      >
-        <ChevronDown className="h-4 w-4" />
-      </button>
+        {/* Regex toggle */}
+        <button
+          onClick={() => setRegex(!regex)}
+          className={`p-1.5 md:p-0 text-xs transition-colors ${regex ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
+          title="Toggle regex mode"
+        >
+          .*
+        </button>
 
-      {/* Separator */}
-      <div className="w-px h-6 bg-slate-700" />
+        {/* Case sensitive toggle */}
+        <button
+          onClick={() => setCaseSensitive(!caseSensitive)}
+          className={`p-1.5 md:p-0 text-xs transition-colors ${caseSensitive ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
+          title="Toggle case sensitive"
+        >
+          Aa
+        </button>
 
-      {/* Regex toggle */}
-      <button
-        onClick={() => setRegex(!regex)}
-        className={`p-1.5 md:p-0 text-xs transition-colors ${regex ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
-        title="Toggle regex mode"
-      >
-        .*
-      </button>
+        {/* Whole word toggle */}
+        <button
+          onClick={() => setWholeWord(!wholeWord)}
+          className={`p-1.5 md:p-0 transition-colors ${wholeWord ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
+          title="Toggle whole word"
+        >
+          <Type className="h-3 w-3" />
+        </button>
 
-      {/* Case sensitive toggle */}
-      <button
-        onClick={() => setCaseSensitive(!caseSensitive)}
-        className={`p-1.5 md:p-0 text-xs transition-colors ${caseSensitive ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
-        title="Toggle case sensitive"
-      >
-        Aa
-      </button>
+        {/* Separator */}
+        <div className="hidden md:block w-px h-6 bg-slate-700" />
 
-      {/* Whole word toggle */}
-      <button
-        onClick={() => setWholeWord(!wholeWord)}
-        className={`p-1.5 md:p-0 transition-colors ${wholeWord ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
-        title="Toggle whole word"
-      >
-        <Type className="h-3 w-3" />
-      </button>
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 transition-colors ml-auto md:ml-0"
+          title="Close search (Esc)"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
 
-      {/* Separator */}
-      <div className="w-px h-6 bg-slate-700" />
+      {/* Bottom row (mobile only): navigation buttons */}
+      <div className="flex md:hidden gap-2 justify-center">
+        {/* Previous match button */}
+        <button
+          onClick={() =>
+            onFindPrevious(query, {
+              regex,
+              caseSensitive,
+              wholeWord,
+              incremental: false,
+              decorations: {
+                matchBackground: '#ffff00',
+                matchBorder: '#ffff00',
+                activeMatchBackground: '#ffff00',
+                activeMatchBorder: '#ffff00',
+                matchOverviewRuler: '#ffff00',
+                activeMatchColorOverviewRuler: '#ffff00',
+              },
+            })
+          }
+          disabled={!query}
+          className="p-1.5 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors flex flex-col items-center gap-0.5"
+          title="Find previous (↑)"
+        >
+          <ChevronUp className="h-5 w-5" />
+          <span className="text-xs">Prev</span>
+        </button>
 
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 transition-colors"
-        title="Close search (Esc)"
-      >
-        <X className="h-4 w-4" />
-      </button>
+        {/* Next match button */}
+        <button
+          onClick={() =>
+            onFindNext(query, {
+              regex,
+              caseSensitive,
+              wholeWord,
+              incremental: false,
+              decorations: {
+                matchBackground: '#ffff00',
+                matchBorder: '#ffff00',
+                activeMatchBackground: '#ffff00',
+                activeMatchBorder: '#ffff00',
+                matchOverviewRuler: '#ffff00',
+                activeMatchColorOverviewRuler: '#ffff00',
+              },
+            })
+          }
+          disabled={!query}
+          className="p-1.5 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors flex flex-col items-center gap-0.5"
+          title="Find next (↓ or Enter)"
+        >
+          <ChevronDown className="h-5 w-5" />
+          <span className="text-xs">Next</span>
+        </button>
+      </div>
+
+      {/* Desktop only: inline navigation buttons */}
+      <div className="hidden md:flex md:gap-2">
+        {/* Previous match button */}
+        <button
+          onClick={() =>
+            onFindPrevious(query, {
+              regex,
+              caseSensitive,
+              wholeWord,
+              incremental: false,
+              decorations: {
+                matchBackground: '#ffff00',
+                matchBorder: '#ffff00',
+                activeMatchBackground: '#ffff00',
+                activeMatchBorder: '#ffff00',
+                matchOverviewRuler: '#ffff00',
+                activeMatchColorOverviewRuler: '#ffff00',
+              },
+            })
+          }
+          disabled={!query}
+          className="text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
+          title="Find previous (↑)"
+        >
+          <ChevronUp className="h-4 w-4" />
+        </button>
+
+        {/* Next match button */}
+        <button
+          onClick={() =>
+            onFindNext(query, {
+              regex,
+              caseSensitive,
+              wholeWord,
+              incremental: false,
+              decorations: {
+                matchBackground: '#ffff00',
+                matchBorder: '#ffff00',
+                activeMatchBackground: '#ffff00',
+                activeMatchBorder: '#ffff00',
+                matchOverviewRuler: '#ffff00',
+                activeMatchColorOverviewRuler: '#ffff00',
+              },
+            })
+          }
+          disabled={!query}
+          className="text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
+          title="Find next (↓ or Enter)"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   )
 }
