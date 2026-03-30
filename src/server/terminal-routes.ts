@@ -54,6 +54,12 @@ export function createTerminalRouter(): Router {
         return
       }
 
+      // H-4: Prevent memory exhaustion from oversized labels
+      if (label.length > 1024) {
+        res.status(400).json({ error: "Label must be 1024 characters or less" })
+        return
+      }
+
       const session = getSession(id)
       if (!session) {
         res.status(404).json({ error: "Session not found" })

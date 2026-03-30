@@ -544,9 +544,9 @@ export default function App() {
     try {
       const res = await fetch('/api/auth/2fa/qr', { credentials: 'include' })
       if (res.ok) {
-        const data = (await res.json()) as { dataUrl: string; manualEntryKey: string }
+        const data = (await res.json()) as { dataUrl: string }
         setTotpQrDataUrl(data.dataUrl)
-        setTotpManualKey(data.manualEntryKey)
+        setTotpManualKey(null) // HIGH-3: Secret is no longer returned to client
       } else {
         setAuthError('Failed to generate QR code')
       }
@@ -672,11 +672,14 @@ export default function App() {
     setTotpLoading(true)
 
     try {
+      // HIGH-3: Don't send secret to server (it's stored server-side)
+      const body: { code: string } = { code }
+
       const res = await fetch('/api/auth/2fa/setup', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret: totpManualKey, code }),
+        body: JSON.stringify(body),
       })
 
       const data = (await res.json()) as { success?: boolean; error?: string }

@@ -24,6 +24,7 @@ const ALLOWED_ENV_KEYS = new Set([
   "NODE_ENV",
   "ALLOWED_HOSTS",
   "LOG_FILE",
+  "VERBOSE", // L-2: Enable verbose logging
 ])
 
 /**

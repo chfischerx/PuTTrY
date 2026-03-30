@@ -358,6 +358,7 @@ export function getSessionProcessInfo(id: string): ProcessInfo | null {
     const psOutput = execFileSync("ps", ["-p", String(pid), "-o", "rss=,pcpu="], {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "ignore"], // Ignore stderr
+      timeout: 3000, // H-5: Prevent event loop blocking if ps hangs
     }).trim()
 
     let memory = "N/A"

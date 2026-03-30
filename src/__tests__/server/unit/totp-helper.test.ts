@@ -29,9 +29,8 @@ describe("totp-helper", () => {
       const qrData = await generateQRCode(secret, email)
 
       expect(qrData).toHaveProperty("dataUrl")
-      expect(qrData).toHaveProperty("manualEntryKey")
       expect(qrData.dataUrl).toMatch(/^data:image/)
-      expect(qrData.manualEntryKey).toBe(secret)
+      // M-3: manualEntryKey is no longer returned (secret stored server-side)
     })
 
     it("should include email and app name in QR code URI", async () => {
@@ -42,7 +41,7 @@ describe("totp-helper", () => {
       const qrData = await generateQRCode(secret, email, appName)
 
       expect(qrData.dataUrl).toBeTruthy()
-      expect(qrData.manualEntryKey).toBe(secret)
+      // M-3: manualEntryKey is no longer returned (secret stored server-side)
     })
 
     it("should use default app name if not provided", async () => {
@@ -50,7 +49,7 @@ describe("totp-helper", () => {
       const qrData = await generateQRCode(secret, "test@example.com")
 
       expect(qrData).toHaveProperty("dataUrl")
-      expect(qrData).toHaveProperty("manualEntryKey")
+      // M-3: manualEntryKey is no longer returned (secret stored server-side)
     })
   })
 

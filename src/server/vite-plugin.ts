@@ -115,7 +115,9 @@ export function webTerminalPlugin(): Plugin {
             }
           }
           syncWss.handleUpgrade(req, socket, head, (ws) => {
-            const clientId = url.searchParams.get('clientId') || ''
+            // L-1: Validate clientId format to prevent log injection
+            const rawClientId = url.searchParams.get('clientId') || ''
+            const clientId = /^[a-zA-Z0-9\-_]*$/.test(rawClientId) ? rawClientId : ''
             const snapshot = getAllSessions().map(s => ({ id: s.id, label: s.label, createdAt: s.createdAt, cols: s.cols, rows: s.rows, inputLockClientId: s.inputLockClientId ?? null }))
             ws.send(JSON.stringify({ type: "snapshot", sessions: snapshot }))
             addSyncClient(ws)

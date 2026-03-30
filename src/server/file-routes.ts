@@ -27,6 +27,13 @@ const HOME = homedir()
 const MAX_DOWNLOAD_SIZE = 2 * 1024 ** 3 // 2 GB
 const MAX_UPLOAD_SIZE = 512 * 1024 ** 1024 // 512 MB
 
+// M-2: Sanitize filename for safe use in Content-Disposition header
+function sanitizeContentDispositionFilename(filename: string): string {
+  // Remove or escape characters that could break out of the filename="..." value
+  // Specifically: ", ;, newlines, carriage returns
+  return filename.replace(/["\n\r;]/g, '_')
+}
+
 /**
  * Safely resolve a path to ensure it stays within HOME directory.
  * Returns null if the path escapes HOME.
@@ -173,7 +180,7 @@ async function handleDownloadZip(req: Request, res: Response) {
     const zipName = items.length === 1 ? `${items[0].basename}.zip` : 'download.zip'
 
     res.setHeader('Content-Type', 'application/zip')
-    res.setHeader('Content-Disposition', `attachment; filename="${zipName}"`)
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizeContentDispositionFilename(zipName)}"`)
 
     const archive = archiver('zip', { zlib: { level: 6 } })
 
@@ -325,7 +332,7 @@ async function handleDownload(req: Request, res: Response) {
 
     res.setHeader('Content-Type', 'application/octet-stream')
     res.setHeader('Content-Encoding', 'gzip')
-    res.setHeader('Content-Disposition', `attachment; filename="${basename(abs)}"`)
+    res.setHeader('Content-Disposition', `attachment; filename="${sanitizeContentDispositionFilename(basename(abs))}"`)
 
     await pipeline(fs.createReadStream(abs), zlib.createGzip(), res)
   } catch (err) {
@@ -384,6 +391,17 @@ async function handleUpload(req: Request, res: Response) {
 
     // Check if gzip compressed
     const isCompressed = req.headers['x-compressed'] === 'gzip'
+
+    // M-1: Prevent zip bombs by checking raw request body size before decompression
+    if (isCompressed) {
+      const contentLength = parseInt(req.headers['content-length'] || '0', 10)
+      const MAX_COMPRESSED_SIZE = 100 * 1024 * 1024 // 100 MB limit for compressed data
+      if (contentLength > MAX_COMPRESSED_SIZE) {
+        res.status(413).json({ error: 'Compressed upload too large' })
+        return
+      }
+    }
+
     const inputStream = isCompressed ? req.pipe(zlib.createGunzip()) : req
 
     // Track bytes and enforce limit

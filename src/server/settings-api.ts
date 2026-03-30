@@ -34,6 +34,16 @@ const SETTINGS_REGISTRY = {
 
 type ConfigKey = keyof typeof config
 
+// Get public config (only keys in SETTINGS_REGISTRY)
+// HIGH-1: Excludes sensitive operational keys like AUTH_DISABLED and rate limits
+export function getPublicConfig(): Record<string, any> {
+  const publicConfig: Record<string, any> = {}
+  for (const key of Object.keys(SETTINGS_REGISTRY)) {
+    publicConfig[key] = (config as Record<string, any>)[key]
+  }
+  return publicConfig
+}
+
 // Determine which .env file to use
 export function getEnvFilePath(): string {
   const localPath = join(import.meta.dirname, "../../.env.local")

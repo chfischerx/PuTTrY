@@ -3,6 +3,7 @@ import type { RateLimitRequestHandler } from "express-rate-limit"
 import { createRequireAuth } from "./auth/middleware.js"
 import { createAuthRouter } from "./auth/routes.js"
 import { activeSessions, parseBrowserSessionToken } from "./session-store.js"
+import { getPublicConfig } from "./settings-api.js"
 
 /**
  * Create and configure the Express app with all shared middleware and routes
@@ -92,7 +93,7 @@ export async function createApp(options: {
 
   // Settings endpoints
   app.get("/api/settings", requireAuth, (_req: Request, res: Response) => {
-    res.json(config)
+    res.json(getPublicConfig())
   })
 
   app.post("/api/settings", requireAuth, (req: Request<unknown, unknown, { key: string; value: string }>, res: Response) => {

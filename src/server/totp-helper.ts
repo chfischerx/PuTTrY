@@ -3,7 +3,7 @@ import QRCode from "qrcode"
 
 export interface QRCodeData {
   dataUrl: string
-  manualEntryKey: string
+  // M-3: manualEntryKey removed (secret is stored server-side, never sent to client)
 }
 
 // TOTP replay prevention: track the last used code and timestamp per secret
@@ -22,7 +22,7 @@ export async function generateQRCode(secret: string, email: string, appName = "P
   const dataUrl = await QRCode.toDataURL(keyUri)
   return {
     dataUrl,
-    manualEntryKey: secret,
+    // M-3: Secret is stored server-side only, never sent to client
   }
 }
 
