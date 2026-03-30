@@ -403,6 +403,7 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
   useEffect(() => {
     if (!searchOpen) {
       setSearchResult(null)
+      searchAddonRef.current?.clearDecorations()
     }
   }, [searchOpen])
 
