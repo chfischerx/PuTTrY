@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronUp, ChevronDown, X } from 'lucide-react'
-import { Button } from './ui/button'
 
 interface TerminalSearchBarProps {
   onFindNext: (term: string, opts: SearchOptions) => void
@@ -113,8 +112,7 @@ export function TerminalSearchBar({
       )}
 
       {/* Previous match button */}
-      <Button
-        size="sm"
+      <button
         onClick={() =>
           onFindPrevious(query, {
             regex,
@@ -132,15 +130,14 @@ export function TerminalSearchBar({
           })
         }
         disabled={!query}
-        className="[&_svg]:size-4 bg-slate-700 hover:bg-slate-600 text-slate-100"
+        className="text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
         title="Find previous (Shift+Enter)"
       >
         <ChevronUp className="h-4 w-4" />
-      </Button>
+      </button>
 
       {/* Next match button */}
-      <Button
-        size="sm"
+      <button
         onClick={() =>
           onFindNext(query, {
             regex,
@@ -158,57 +155,53 @@ export function TerminalSearchBar({
           })
         }
         disabled={!query}
-        className="[&_svg]:size-4 bg-slate-700 hover:bg-slate-600 text-slate-100"
+        className="text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
         title="Find next (Enter)"
       >
         <ChevronDown className="h-4 w-4" />
-      </Button>
+      </button>
 
       {/* Separator */}
       <div className="w-px h-6 bg-slate-700" />
 
       {/* Regex toggle */}
-      <Button
-        size="sm"
+      <button
         onClick={() => setRegex(!regex)}
-        className={`text-xs px-1.5 [&_svg]:size-3 ${regex ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-100'}`}
+        className={`text-xs transition-colors ${regex ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
         title="Toggle regex mode"
       >
         .*
-      </Button>
+      </button>
 
       {/* Case sensitive toggle */}
-      <Button
-        size="sm"
+      <button
         onClick={() => setCaseSensitive(!caseSensitive)}
-        className={`text-xs px-1.5 [&_svg]:size-3 ${caseSensitive ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-100'}`}
+        className={`text-xs transition-colors ${caseSensitive ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
         title="Toggle case sensitive"
       >
         Aa
-      </Button>
+      </button>
 
       {/* Whole word toggle */}
-      <Button
-        size="sm"
+      <button
         onClick={() => setWholeWord(!wholeWord)}
-        className={`text-xs px-1.5 [&_svg]:size-3 ${wholeWord ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-100'}`}
+        className={`text-xs transition-colors ${wholeWord ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
         title="Toggle whole word"
       >
         [W]
-      </Button>
+      </button>
 
       {/* Separator */}
       <div className="w-px h-6 bg-slate-700" />
 
       {/* Close button */}
-      <Button
-        size="sm"
+      <button
         onClick={onClose}
-        className="[&_svg]:size-4 bg-slate-700 hover:bg-slate-600 text-slate-100"
+        className="text-slate-400 hover:text-slate-100 transition-colors"
         title="Close search (Esc)"
       >
         <X className="h-4 w-4" />
-      </Button>
+      </button>
     </div>
   )
 }
