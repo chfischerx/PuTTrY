@@ -187,7 +187,7 @@ export function TerminalSearchBar({
       </div>
 
       {/* Navigation buttons (vertical stack, separate) */}
-      <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-1 flex flex-col gap-1 w-fit">
+      <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-1 flex flex-col gap-1 w-fit self-end">
         {/* Previous match button */}
         <button
           onClick={() =>
