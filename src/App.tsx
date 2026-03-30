@@ -1260,18 +1260,6 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    setSearchOpen(true)
-                    setMobileMenuOpen(false)
-                  }}
-                  className="w-full px-4 py-3 text-left rounded-md bg-muted/30 hover:bg-muted transition-colors flex items-center gap-3">
-                  <Search className="h-5 w-5 flex-shrink-0" />
-                  <span className="text-base">Find in Terminal</span>
-                </button>
-              )}
-              {authStatus === 'authenticated' && activeSessionId && (
-                <button
-                  type="button"
-                  onClick={() => {
                     handleShowProcessInfo()
                     setMobileMenuOpen(false)
                   }}
@@ -1571,6 +1559,17 @@ export default function App() {
                 </div>
               </div>
             </>
+          )}
+
+          {/* Mobile search button */}
+          {isMobile && activeSessionId && (
+            <button
+              type="button"
+              className="p-2 hover:bg-accent rounded transition-colors"
+              onClick={() => setSearchOpen(true)}
+              title="Find in terminal">
+              <Search className="h-5 w-5" />
+            </button>
           )}
 
           {/* Mobile ⋯ menu button — only trigger stays in top bar */}
