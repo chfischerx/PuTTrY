@@ -6,6 +6,7 @@ interface TerminalSearchBarProps {
   onFindNext: (term: string, opts: SearchOptions) => void
   onFindPrevious: (term: string, opts: SearchOptions) => void
   onClose: () => void
+  searchResult?: { resultIndex: number; resultCount: number } | null
 }
 
 export interface SearchOptions {
@@ -27,6 +28,7 @@ export function TerminalSearchBar({
   onFindNext,
   onFindPrevious,
   onClose,
+  searchResult,
 }: TerminalSearchBarProps) {
   const [query, setQuery] = useState('')
   const [regex, setRegex] = useState(false)
@@ -98,6 +100,15 @@ export function TerminalSearchBar({
         placeholder="Find in terminal..."
         className="px-2 py-1 text-sm rounded border border-slate-700 bg-slate-800 text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-40"
       />
+
+      {/* Match count */}
+      {searchResult && query && (
+        <span className="text-xs text-slate-400 whitespace-nowrap px-1 min-w-[4rem] text-center">
+          {searchResult.resultIndex === -1
+            ? '> 1000'
+            : `${searchResult.resultIndex + 1} / ${searchResult.resultCount}`}
+        </span>
+      )}
 
       {/* Previous match button */}
       <Button

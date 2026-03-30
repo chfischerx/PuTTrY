@@ -50,6 +50,7 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
   const dataDisposableRef = useRef<{ dispose: () => void } | null>(null)
   const [optimisticLock, setOptimisticLock] = useState(false)
   const [reconnectKey, setReconnectKey] = useState(0)
+  const [searchResult, setSearchResult] = useState<{ resultIndex: number; resultCount: number } | null>(null)
   const isActiveRef = useRef(isActive)
   isActiveRef.current = isActive
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -138,6 +139,11 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     terminalRef.current = term
     fitAddonRef.current = fitAddon
     searchAddonRef.current = searchAddon
+
+    // Subscribe to search result changes
+    searchAddon.onDidChangeResults((e) => {
+      setSearchResult({ resultIndex: e.resultIndex, resultCount: e.resultCount })
+    })
 
     // Terminal opening is deferred to when it becomes active (see visibility effect)
     // This ensures proper dimension calculations for fit()
@@ -390,6 +396,13 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     })
   }, [isActive, onSearchOpen])
 
+  // Reset search result when search bar is closed
+  useEffect(() => {
+    if (!searchOpen) {
+      setSearchResult(null)
+    }
+  }, [searchOpen])
+
   // Cleanup terminal when component unmounts (session is removed)
   useEffect(() => {
     return () => {
@@ -449,6 +462,7 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
           onFindNext={handleFindNext}
           onFindPrevious={handleFindPrevious}
           onClose={onSearchClose || (() => {})}
+          searchResult={searchResult}
         />
       )}
     </div>
