@@ -44,7 +44,7 @@ export function TerminalSearchBar({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const decorations = {
-        matchBackground: '#ffeecc',
+        matchBackground: '#ffd080',
         matchBorder: '#ff8800',
         activeMatchBackground: '#ffeecc',
         activeMatchBorder: '#ffff00',
