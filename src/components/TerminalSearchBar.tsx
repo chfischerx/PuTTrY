@@ -104,7 +104,7 @@ export function TerminalSearchBar({
 
       {/* Match count */}
       {searchResult && query && (
-        <span className="text-xs text-slate-400 whitespace-nowrap px-0.5 min-w-[4rem] text-center">
+        <span className="text-xs text-slate-400 whitespace-nowrap">
           {searchResult.resultIndex === -1
             ? '> 1000'
             : `${searchResult.resultIndex + 1} / ${searchResult.resultCount}`}
