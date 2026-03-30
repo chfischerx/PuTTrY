@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronUp, ChevronDown, X } from 'lucide-react'
+import { ChevronUp, ChevronDown, X, Type } from 'lucide-react'
 
 interface TerminalSearchBarProps {
   onFindNext: (term: string, opts: SearchOptions) => void
@@ -185,10 +185,10 @@ export function TerminalSearchBar({
       {/* Whole word toggle */}
       <button
         onClick={() => setWholeWord(!wholeWord)}
-        className={`text-xs transition-colors ${wholeWord ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
+        className={`transition-colors ${wholeWord ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
         title="Toggle whole word"
       >
-        [W]
+        <Type className="h-4 w-4" />
       </button>
 
       {/* Separator */}
