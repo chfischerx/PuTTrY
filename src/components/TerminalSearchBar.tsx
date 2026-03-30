@@ -114,10 +114,10 @@ export function TerminalSearchBar({
   const decorations = {
     matchBackground: '#ffff00',
     matchBorder: '#ffff00',
-    activeMatchBackground: '#000000',
+    activeMatchBackground: '#ffff00',
     activeMatchBorder: '#ffff00',
     matchOverviewRuler: '#ffff00',
-    activeMatchColorOverviewRuler: '#000000',
+    activeMatchColorOverviewRuler: '#ffff00',
   }
 
   return (
