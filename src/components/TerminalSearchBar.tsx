@@ -188,7 +188,7 @@ export function TerminalSearchBar({
         className={`transition-colors ${wholeWord ? 'text-blue-400 hover:text-blue-300' : 'text-slate-400 hover:text-slate-100'}`}
         title="Toggle whole word"
       >
-        <Type className="h-4 w-4" />
+        <Type className="h-3 w-3" />
       </button>
 
       {/* Separator */}
