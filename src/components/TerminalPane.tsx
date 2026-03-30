@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react'
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { SearchAddon } from '@xterm/addon-search'
@@ -45,6 +45,7 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
   const terminalRef = useRef<Terminal | null>(null)
   const fitAddonRef = useRef<FitAddon | null>(null)
   const searchAddonRef = useRef<SearchAddon | null>(null)
+  const searchResultDisposableRef = useRef<{ dispose: () => void } | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
   const dataDisposableRef = useRef<{ dispose: () => void } | null>(null)
@@ -140,10 +141,12 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     fitAddonRef.current = fitAddon
     searchAddonRef.current = searchAddon
 
-    // Subscribe to search result changes
-    searchAddon.onDidChangeResults((e) => {
-      setSearchResult({ resultIndex: e.resultIndex, resultCount: e.resultCount })
-    })
+    // Subscribe to search result changes (only once per terminal)
+    if (!searchResultDisposableRef.current) {
+      searchResultDisposableRef.current = searchAddon.onDidChangeResults((e) => {
+        setSearchResult({ resultIndex: e.resultIndex, resultCount: e.resultCount })
+      })
+    }
 
     // Terminal opening is deferred to when it becomes active (see visibility effect)
     // This ensures proper dimension calculations for fit()
@@ -406,6 +409,10 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
   // Cleanup terminal when component unmounts (session is removed)
   useEffect(() => {
     return () => {
+      if (searchResultDisposableRef.current) {
+        searchResultDisposableRef.current.dispose()
+        searchResultDisposableRef.current = null
+      }
       const cached = terminalCache.get(sessionId)
       if (cached) {
         cached.terminal.dispose()
@@ -414,7 +421,7 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
     }
   }, [sessionId])
 
-  const handleFindNext = (term: string, opts: SearchOptions) => {
+  const handleFindNext = useCallback((term: string, opts: SearchOptions) => {
     const searchAddon = searchAddonRef.current
     if (!searchAddon || !term) return
     searchAddon.findNext(term, {
@@ -428,9 +435,9 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
         activeMatchColorOverviewRuler: '#ff8800',
       },
     })
-  }
+  }, [])
 
-  const handleFindPrevious = (term: string, opts: SearchOptions) => {
+  const handleFindPrevious = useCallback((term: string, opts: SearchOptions) => {
     const searchAddon = searchAddonRef.current
     if (!searchAddon || !term) return
     searchAddon.findPrevious(term, {
@@ -444,7 +451,7 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
         activeMatchColorOverviewRuler: '#ff8800',
       },
     })
-  }
+  }, [])
 
   return (
     <div

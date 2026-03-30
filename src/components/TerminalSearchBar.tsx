@@ -84,6 +84,8 @@ export function TerminalSearchBar({
           matchBorder: '#ffff00',
           activeMatchBackground: '#ff8800',
           activeMatchBorder: '#ff8800',
+          matchOverviewRuler: '#ffff00',
+          activeMatchColorOverviewRuler: '#ff8800',
         },
       })
     }
