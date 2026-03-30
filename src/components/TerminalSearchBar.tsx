@@ -121,7 +121,7 @@ export function TerminalSearchBar({
   }
 
   return (
-    <div className="absolute top-0 right-0 z-50 m-2 flex gap-2">
+    <div className="absolute top-0 right-0 z-50 m-2 flex flex-col gap-2">
       {/* Search bar */}
       <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex items-center gap-2">
         {/* Search input */}
