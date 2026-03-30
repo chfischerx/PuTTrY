@@ -121,9 +121,9 @@ export function TerminalSearchBar({
   }
 
   return (
-    <div className="absolute top-0 right-0 z-50 m-2 bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex items-center gap-2 max-w-md">
-      {/* Search input and controls */}
-      <div className="flex items-center gap-2">
+    <div className="absolute top-0 right-0 z-50 m-2 flex gap-2">
+      {/* Search bar */}
+      <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex items-center gap-2">
         {/* Search input */}
         <input
           ref={inputRef}
@@ -186,8 +186,8 @@ export function TerminalSearchBar({
         </button>
       </div>
 
-      {/* Navigation buttons (vertical stack on right) */}
-      <div className="flex flex-col gap-0.5">
+      {/* Navigation buttons (vertical stack, separate) */}
+      <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-1 flex flex-col gap-1">
         {/* Previous match button */}
         <button
           onClick={() =>
@@ -200,7 +200,7 @@ export function TerminalSearchBar({
             })
           }
           disabled={!query}
-          className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
+          className="p-1.5 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
           title="Find previous (↑)"
         >
           <ChevronUp className="h-4 w-4" />
@@ -218,7 +218,7 @@ export function TerminalSearchBar({
             })
           }
           disabled={!query}
-          className="p-1.5 md:p-0 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
+          className="p-1.5 text-slate-400 hover:text-slate-100 disabled:text-slate-600 transition-colors"
           title="Find next (↓ or Enter)"
         >
           <ChevronDown className="h-4 w-4" />
