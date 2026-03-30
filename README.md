@@ -21,6 +21,8 @@ A secure, browser-based terminal that keeps your server sessions alive across de
 - [Network and Infrastructure Security](#network-and-infrastructure-security)
 - [Technical Architecture](#technical-architecture)
 - [Development](#development)
+- [Contributing](#contributing)
+- [Connect](#connect)
 - [License](#license)
 
 ## Project Website
@@ -449,6 +451,26 @@ The dev server runs on `http://localhost:5175` with hot module reloading (HMR) f
 The custom Vite plugin (`vite-plugin.ts`) handles the Express integration and WebSocket upgrades for `/sync` (session coordination) and `/terminal/:sessionId` (PTY I/O).
 
 For comprehensive development documentation including setup, project structure, build processes, debugging techniques, and performance considerations, see [Development](./docs/DEVELOPMENT.md).
+
+## Contributing
+
+PuTTrY is currently feature complete for its intended purpose: remote shell access and file transfer via a browser. The goal is to keep it **slim and focused** — not to grow it into a general-purpose platform.
+
+That said, contributions are welcome in the areas that matter most:
+
+- **Bug reports**: Found something broken? Please open an issue with steps to reproduce.
+- **Security issues**: Found a vulnerability? Please report it responsibly via a GitHub issue (or privately if the impact is significant). Security fixes are the highest priority.
+- **Mobile compatibility**: Encountered something broken or awkward on a mobile browser? Reports and fixes for mobile UX issues are especially appreciated.
+- **Stability improvements**: Crashes, edge cases, error handling — anything that makes the tool more reliable.
+- **Meaningful new features**: If you have an idea that fits PuTTrY's purpose well, open an issue to discuss it first before writing code. The bar for new features is intentional scope fit, not just usefulness in general.
+
+### Before Opening a Pull Request
+
+1. Open an issue first if you're working on anything beyond a small bugfix, so there's alignment before effort is spent.
+2. Run tests with `npm test` and make sure they all pass.
+3. Keep changes focused — small, targeted PRs are much easier to review than large ones.
+
+Feedback, suggestions, and ideas are always welcome even without a code contribution.
 
 ## Connect
 
