@@ -429,10 +429,10 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
       decorations: {
         matchBackground: '#ffff00',
         matchBorder: '#ffff00',
-        activeMatchBackground: '#ffffff',
-        activeMatchBorder: '#ffffff',
+        activeMatchBackground: '#000000',
+        activeMatchBorder: '#ffff00',
         matchOverviewRuler: '#ffff00',
-        activeMatchColorOverviewRuler: '#ffffff',
+        activeMatchColorOverviewRuler: '#000000',
       },
     })
   }, [])
@@ -445,10 +445,10 @@ const TerminalPane = forwardRef<TerminalPaneHandle, TerminalPaneProps>(({ sessio
       decorations: {
         matchBackground: '#ffff00',
         matchBorder: '#ffff00',
-        activeMatchBackground: '#ffffff',
-        activeMatchBorder: '#ffffff',
+        activeMatchBackground: '#000000',
+        activeMatchBorder: '#ffff00',
         matchOverviewRuler: '#ffff00',
-        activeMatchColorOverviewRuler: '#ffffff',
+        activeMatchColorOverviewRuler: '#000000',
       },
     })
   }, [])
