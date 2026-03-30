@@ -91,7 +91,7 @@ export function TerminalSearchBar({
   }, [query, regex, caseSensitive, wholeWord, onFindNext])
 
   return (
-    <div className="absolute top-0 right-0 z-50 m-2 bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex items-center gap-1 max-w-md">
+    <div className="absolute top-0 right-0 z-50 m-2 bg-slate-900 border border-slate-700 rounded-lg shadow-lg p-2 flex items-center gap-2 max-w-md">
       {/* Search input */}
       <input
         ref={inputRef}
@@ -104,7 +104,7 @@ export function TerminalSearchBar({
 
       {/* Match count */}
       {searchResult && query && (
-        <span className="text-xs text-slate-400 whitespace-nowrap px-1 min-w-[4rem] text-center">
+        <span className="text-xs text-slate-400 whitespace-nowrap px-0.5 min-w-[4rem] text-center">
           {searchResult.resultIndex === -1
             ? '> 1000'
             : `${searchResult.resultIndex + 1} / ${searchResult.resultCount}`}
