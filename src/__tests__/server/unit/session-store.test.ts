@@ -9,7 +9,7 @@ import {
   createTempSession,
   clearBrowserSessionCookie,
   clearTempSessionCookie,
-} from "../../../server/session-store"
+} from "../../../server/sessions/store"
 
 describe("session-store", () => {
   beforeEach(() => {

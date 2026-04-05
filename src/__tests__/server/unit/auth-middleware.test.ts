@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { createRequireAuth, createRequireAuthOrTempSession } from "../../../server/auth/middleware"
-import { activeSessions, pendingTotpSessions, createBrowserSession, createTempSession } from "../../../server/session-store"
+import { activeSessions, pendingTotpSessions, createBrowserSession, createTempSession } from "../../../server/sessions/store"
 
 describe("auth-middleware", () => {
   beforeEach(() => {

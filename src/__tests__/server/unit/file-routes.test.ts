@@ -8,7 +8,7 @@ vi.mock("node:fs")
 vi.mock("node:os", () => ({
   homedir: () => "/fake/home",
 }))
-vi.mock("../../../server/logger.js", () => ({
+vi.mock("../../../server/lib/logger.js", () => ({
   default: {
     error: vi.fn(),
     warn: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock("../../../server/logger.js", () => ({
   },
 }))
 
-import { createFileRouter } from "../../../server/file-routes"
+import { createFileRouter } from "../../../server/routes/files"
 
 describe("file-routes", () => {
   let app: any

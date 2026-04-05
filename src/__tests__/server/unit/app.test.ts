@@ -9,7 +9,7 @@ vi.mock("node:os", () => ({
   homedir: () => "/fake/home",
 }))
 
-vi.mock("../../../server/logger.js", () => ({
+vi.mock("../../../server/lib/logger.js", () => ({
   default: {
     error: vi.fn(),
     warn: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock("../../../server/logger.js", () => ({
   },
 }))
 
-vi.mock("../../../server/pty-manager.js", () => ({
+vi.mock("../../../server/sessions/pty-manager.js", () => ({
   createSession: vi.fn((cols, rows) => ({
     id: "mock-session",
     label: "Mock Session",
@@ -32,12 +32,15 @@ vi.mock("../../../server/pty-manager.js", () => ({
   getSessionProcessInfo: vi.fn(() => null),
 }))
 
-vi.mock("../../../server/passkey-state.js", () => ({
+vi.mock("../../../server/auth/passkey-state.js", () => ({
   getPasskeys: vi.fn(() => []),
 }))
 
 vi.mock("../../../server/auth/middleware.js", () => ({
   createRequireAuth: vi.fn(() => (_req: any, _res: any, next: () => void) =>
+    next()
+  ),
+  createRequireOwnerOrGuestAuth: vi.fn(() => (_req: any, _res: any, next: () => void) =>
     next()
   ),
 }))
@@ -49,12 +52,12 @@ vi.mock("../../../server/auth/routes.js", () => ({
   }),
 }))
 
-vi.mock("../../../server/session-store.js", () => ({
+vi.mock("../../../server/sessions/store.js", () => ({
   activeSessions: new Map(),
   parseBrowserSessionToken: vi.fn(() => null),
 }))
 
-vi.mock("../../../server/settings-api.js", () => ({
+vi.mock("../../../server/lib/settings.js", () => ({
   getPublicConfig: vi.fn(() => ({ SCROLLBACK_LINES: 10000 })),
 }))
 
@@ -287,7 +290,7 @@ describe("app", () => {
 
     it("should include passkeyLoginAvailable when passkeys exist and PASSKEY_AS_2FA is false", async () => {
       const { getPasskeys } = await import(
-        "../../../server/passkey-state.js"
+        "../../../server/auth/passkey-state.js"
       )
       vi.mocked(getPasskeys).mockReturnValueOnce([
         {

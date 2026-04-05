@@ -9,6 +9,7 @@ This guide walks you through every part of PuTTrY's web interface and how to use
 - [Mobile Browser Usage](#mobile-browser-usage)
 - [Terminal Sessions](#terminal-sessions)
 - [Working Across Devices](#working-across-devices)
+- [Guest Links](#guest-links)
 - [File Manager](#file-manager)
 - [General Settings](#general-settings)
 - [Authentication](#authentication)
@@ -418,6 +419,116 @@ The shell process never stops—disconnecting from the browser doesn't interrupt
 
 ---
 
+## Guest Links
+
+**Guest links** allow you to share temporary access to specific terminal sessions without giving away your main session password. Guests can view—and optionally control—sessions you assign to them, without needing to log in with a password.
+
+This is perfect for:
+
+- Inviting a colleague to debug an issue together without revealing your main credentials
+- Giving a team member read-only access to monitor a deployment
+- Sharing session access with contractors or temporary staff without creating accounts
+- Onboarding new team members without managing separate authentication
+
+### Creating a Guest Link
+
+1. Click the **Guest Links** button (👥 icon) in the top toolbar
+2. Click **Create New Link**
+3. Enter a **name** for the link (e.g., "Deploy Support", "Team Monitoring")
+4. Select **which sessions** this guest can access (you can choose one or multiple sessions)
+5. Click **Create**
+
+The link is generated and displayed as a shareable URL, e.g.:
+```
+https://puttry-host:5174/guest/a1b2c3d4e5f6g7h8
+```
+
+You can:
+- **Copy the link** to send via Slack, email, or other channels
+- **Revoke the link** by deleting it from the list (guests can no longer access)
+- **Rename the link** to keep track of different guest sessions
+- **Reassign sessions** to update which sessions the guest can view
+
+### Sharing a Guest Link
+
+Send the guest link URL to your team member. When they open it:
+
+1. No login required—the link grants instant access
+2. They see the assigned sessions in their sidebar
+3. They can view real-time terminal output and switch between assigned sessions
+4. They can take control of a session (subject to write lock rules) if you've granted them that ability
+
+**Example:**
+
+You're deploying to production and want a colleague to watch:
+
+1. Create a guest link called "Deploy Monitor"
+2. Assign the "production" session to it
+3. Send the link: `https://puttry-host:5174/guest/a1b2c3...`
+4. Your colleague opens it and sees the production session in real-time
+5. If something goes wrong, they can click **Take Control** to help debug
+6. When the deployment is done, you delete the link
+
+### What Guests Can Do
+
+Guests with a valid guest link can:
+
+- ✅ **View sessions** assigned to the link
+- ✅ **See real-time terminal output**
+- ✅ **Request write control** (same write lock system as multiple browsers)
+- ✅ **View files** in the file manager (if file access is enabled)
+- ❌ Cannot access other sessions (only those you assigned to the link)
+- ❌ Cannot create new sessions
+- ❌ Cannot change settings or authentication
+
+### Write Control (Guest Input)
+
+Even though a guest is accessing via a guest link:
+
+- **Only one browser can send input at a time** (same write lock as regular sessions)
+- If you're typing and the guest takes control, you become read-only (and vice versa)
+- Either party can force the write lock from the other
+- All output is visible to both simultaneously
+
+This allows seamless collaboration—you can hand off control to a guest, they debug, and you take it back.
+
+### Revoking Guest Access
+
+To immediately revoke a guest's access:
+
+1. Open **Guest Links**
+2. Find the link in the list
+3. Click **Delete** or **Revoke**
+
+The link is invalidated instantly. The guest can no longer access the sessions—if they're already connected, they'll be disconnected on the next sync update.
+
+### Security Considerations
+
+**Guest links are token-based URLs**—anyone with the link has access. Treat them like passwords:
+
+- **Use HTTPS**: Always share guest links over HTTPS to prevent man-in-the-middle interception
+- **Limit session scope**: Only assign sessions the guest actually needs to see
+- **Revoke when done**: Delete guest links as soon as the guest no longer needs them
+- **Rotate sensitive work**: If a guest link has been exposed, revoke it and create a new one
+
+**Example security best practice:**
+
+- Guest link for "on-call support" → revoked at end of shift
+- Guest link for "contractor debugging" → deleted when contractor contract ends
+- Guest link for "team monitoring" → kept active for the duration, but scope limited to non-sensitive sessions
+
+### Monitoring Multiple Guests
+
+You can create multiple guest links to different team members, each with different session assignments:
+
+- **Alice** → guest link with access to "frontend" session
+- **Bob** → guest link with access to "backend" + "database" sessions
+- **Manager** → guest link with read-only access to all sessions (for oversight)
+
+Each guest link is independent—revoking one doesn't affect others.
+
+---
+
 ## File Manager
 
 PuTTrY includes an integrated **file manager** for uploading and downloading files directly from your browser, without needing `scp`, `rsync`, or command-line tools.
@@ -664,16 +775,35 @@ The terminal runs on the server. From your phone on the train home:
 
 ### Handing Off a Session to a Colleague
 
-Your colleague needs to debug an issue you've been investigating:
+Your colleague needs to debug an issue you've been investigating.
+
+**Option 1: Guest Link (Recommended)**
+
+Guest links give scoped, temporary access without sharing your main password:
+
+1. Open **Guest Links** (👥 icon)
+2. Create a new link and assign the specific session(s) your colleague needs
+3. Share the guest link URL with them
+4. They open the link—no login needed, instant access
+5. **Take turns controlling** the session by requesting and releasing the write lock
+6. When done, delete the guest link to revoke access
+
+**Advantages**: Secure, temporary, scoped to specific sessions, easy to revoke.
+
+**Option 2: Share Your Session Password**
+
+If you need to give them full access to all sessions:
 
 1. Share your **session password** with them (via Slack, email, etc.)
 2. They open your PuTTrY instance (same host/port)
 3. Log in with the shared password
-4. They see your terminal sessions and can view the same output
-5. **Take turns controlling** the session by requesting and releasing the write lock
+4. They see all your terminal sessions and can view the same output
+5. **Take turns controlling** sessions by requesting and releasing the write lock
 6. No need to copy command history or reproduce context—they see everything in real-time
 
 **Important**: The session password grants full access to all your sessions. Only share it with people you trust.
+
+**Best practice**: Use guest links for external collaborators or temporary access. Share your session password only with team members you fully trust.
 
 ### Recovering from a Browser Crash
 
@@ -772,6 +902,25 @@ This is useful when:
 1. **Device not registered**: You haven't registered a passkey on this device yet. Go to Settings and register one.
 2. **Browser doesn't support WebAuthn**: Use a modern browser (Chrome, Safari, Edge, Firefox). Some older browsers don't support passkeys.
 3. **Incorrect RP origin**: Passkeys are tied to the domain they were registered on. If you're accessing PuTTrY from a different domain, the passkey won't work.
+
+### Guest Link Expired or Invalid
+
+**Problem**: Guest opens link but gets an error or sees no sessions
+
+**Possible causes:**
+1. **Link was revoked**: You deleted the guest link. Contact the creator to get a new one.
+2. **Wrong URL**: Copy-paste error in the guest link URL. Verify the entire URL is correct.
+3. **Session was deleted**: The session you assigned to the guest link no longer exists. The creator needs to update or recreate the guest link.
+
+**Solution**: Contact the person who created the guest link to get a valid one.
+
+### Guest Can't Take Write Control
+
+**Problem**: Guest clicks "Take Control" but nothing happens
+
+**Cause**: You (or another browser) hold the write lock. Guests use the same write lock system as regular browsers.
+
+**Solution**: Release the write lock or wait for the current controller to release it. The guest can then take control.
 
 ---
 

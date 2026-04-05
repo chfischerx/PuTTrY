@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { generateTotpSecret, generateQRCode, verifyTotp } from "../../../server/totp-helper"
+import { generateTotpSecret, generateQRCode, verifyTotp } from "../../../server/auth/totp-helper"
 
 describe("totp-helper", () => {
   beforeEach(() => {
@@ -87,7 +87,7 @@ describe("totp-helper", () => {
       }))
 
       // Re-import after mock
-      const { verifyTotp: verifyTotpMocked } = await import("../../../server/totp-helper")
+      const { verifyTotp: verifyTotpMocked } = await import("../../../server/auth/totp-helper")
 
       const result1 = await verifyTotpMocked(secret, validCode)
       // Second attempt within 30 seconds should fail (replay prevention)
@@ -107,7 +107,7 @@ describe("totp-helper", () => {
       }))
 
       const { verifyTotp: verifyTotpMocked } = await import(
-        "../../../server/totp-helper"
+        "../../../server/auth/totp-helper"
       )
       const secret = "test-secret"
       const validCode = "123456"
@@ -127,7 +127,7 @@ describe("totp-helper", () => {
       }))
 
       const { verifyTotp: verifyTotpMocked } = await import(
-        "../../../server/totp-helper"
+        "../../../server/auth/totp-helper"
       )
       const secret = "test-secret"
 
@@ -147,7 +147,7 @@ describe("totp-helper", () => {
       }))
 
       const { verifyTotp: verifyTotpMocked } = await import(
-        "../../../server/totp-helper"
+        "../../../server/auth/totp-helper"
       )
 
       const secret = "test-secret"

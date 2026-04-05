@@ -7,7 +7,8 @@ const dir = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   resolve: {
     alias: {
-      "@": path.join(dir, "src"),
+      "@": path.join(dir, "src/client"),
+      "@shared": path.join(dir, "src/shared"),
     },
   },
   test: {

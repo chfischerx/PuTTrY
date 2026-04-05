@@ -6,7 +6,7 @@ vi.mock("node:fs")
 vi.mock("node:os", () => ({
   homedir: () => "/fake/home",
 }))
-vi.mock("../../../server/logger.js", () => ({
+vi.mock("../../../server/lib/logger.js", () => ({
   default: {
     error: vi.fn(),
     warn: vi.fn(),
@@ -15,12 +15,12 @@ vi.mock("../../../server/logger.js", () => ({
 }))
 
 // Mock password utilities
-vi.mock("../../../lib/password-gen.js", () => ({
+vi.mock("../../../shared/utils/password-gen.js", () => ({
   generateXkcdPassword: vi.fn(() => "correct-horse-battery-staple"),
   generateRandomPassword: vi.fn(() => "a1b2c3d4e5f6"),
 }))
 
-vi.mock("../../../server/password-hash.js", () => ({
+vi.mock("../../../server/auth/password-hash.js", () => ({
   hashPassword: vi.fn(async (pwd) => `hashed:${pwd}`),
   verifyPassword: vi.fn(async (candidate, hash) => hash === `hashed:${candidate}`),
 }))
@@ -34,7 +34,7 @@ import {
   save2FAState,
   clear2FAState,
   type TotpState,
-} from "../../../server/auth-state"
+} from "../../../server/auth/state"
 
 describe("auth-state", () => {
   beforeEach(async () => {

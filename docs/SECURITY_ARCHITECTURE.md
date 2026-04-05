@@ -205,6 +205,96 @@ User completes TOTP setup
   → Save TOTP state, promote to browser session
 ```
 
+### 2.5 Guest Links and Sessions
+
+Guest Links provide a secure alternative to password sharing for collaborative access. Instead of exposing the owner's credentials, the owner creates one-time invite URLs that grant limited, time-bound access.
+
+**Link Token Issuance**
+
+Guest links are created via `POST /api/guest-links` (owner only):
+
+- **Token**: 64-character hex string from `randomBytes(32)` — **256 bits of cryptographic entropy**
+- **Storage**: Stored in-memory `guestLinks` Map; never persisted to disk
+- **One-time use**: Stamped with `usedAt` timestamp on first redemption; subsequent attempts are permanently rejected
+- **No expiry on the link itself** — the link can be redeemed anytime, but once redeemed it's invalid
+
+**Redemption and Session Creation**
+
+Guest opens the invite URL and posts to `POST /api/guest/redeem`:
+
+- **Rate limiting**: 20 redemption attempts per 15 minutes per IP
+- **On success**: Server creates a session with `randomUUID()` — **122 bits of entropy**
+- **Session TTL**: 4 hours, enforced both in-memory (`expiresAt` timestamp) and via cookie `Max-Age=14400`
+- **Cookie**: `_wt_guest` with attributes:
+  - `HttpOnly` — prevents JavaScript access (XSS mitigation)
+  - `Secure` — requires HTTPS (default; skipped only if `SECURE_COOKIE=0` in production)
+  - `SameSite=Lax` — weaker than owner's `Strict` (intentional: allows top-level cross-site navigation from email links)
+  - `Path=/` — available to all routes
+- **Stored in-memory**: `activeGuestSessions` Map; lost on server restart
+
+**Comparison: Owner vs. Guest Session Cookies**
+
+| Property | `_wt_session` (owner) | `_wt_guest` (guest) |
+|----------|--------|----------|
+| Token entropy | UUID v4 (122 bit) | UUID v4 (122 bit) |
+| TTL | 24 hours | 4 hours |
+| SameSite | Strict | Lax |
+| Auth method | Password + optional 2FA | Invite URL possession |
+| Persistent storage | None (in-memory) | None (in-memory) |
+
+The `SameSite=Lax` attribute on guest cookies is intentional: it allows the guest to be logged in when they click the invite link from email or a message. This is a reasonable trade-off because (1) guests have read-only access by default, and (2) the invite URL is the single credential—sharing it only grants observation rights.
+
+**Access Control Matrix**
+
+| Capability | Owner | Guest |
+|-----------|-------|-------|
+| View terminal output | ✓ | ✓ (read-only) |
+| Send terminal input | ✓ | Only after owner approval |
+| Take/hold write lock | ✓ | Only after owner approval |
+| Read config & settings | ✓ | ✓ |
+| Change settings | ✓ | ✗ |
+| Access file manager | ✓ | ✗ |
+| Create / revoke guest links | ✓ | ✗ |
+| Approve / deny control requests | ✓ | ✗ |
+
+**Write Lock and Control Request Flow**
+
+Guests are read-only by default. To request write access:
+
+1. Guest clicks a terminal session and selects "Request Control" (or opens a new terminal connection in guest mode)
+2. Guest client sends `{ type: 'request-lock' }` over the terminal WebSocket
+3. Server creates a `LockRequest` entry in-memory with a **30-second timeout**
+4. Owner receives a notification and a dialog asking to approve or deny
+5. **Approval** (`POST /api/guest/lock-requests/:id/approve`):
+   - Guest is granted the write lock for that session's `sessionId`
+   - Input from the guest's `clientId` is now accepted by the PTY
+6. **Denial** (`POST /api/guest/lock-requests/:id/deny`):
+   - Request is deleted; guest returns to read-only mode
+7. **Auto-expiry** (after 30 seconds):
+   - If neither approval nor denial, the request is automatically removed
+   - `lock-request-expired` is broadcast to all clients
+
+**Revocation and Immediate Disconnection**
+
+Owner can revoke guest access at any time:
+
+- **Revoke a single link**: `DELETE /api/guest-links/:id` removes the link and all sessions derived from it
+- **Revoke all links**: Click "Remove All" to delete every guest link and session at once
+- **Instant effect**: Before deleting the session, the server broadcasts a `guest-revoked` sync event containing the affected guest `clientId`s
+- **Guest client behavior**: On receiving `guest-revoked`, the guest client:
+  - Sets `syncActiveRef.current = false` (stops reconnect attempts)
+  - Calls `setAuthStatus('unauthenticated')` (displays login screen)
+
+**No grace period** — disconnection is immediate and unavoidable.
+
+**Session Expiry**
+
+Guest sessions expire automatically after 4 hours:
+
+- In-memory: A `setTimeout` deletes the session entry from `activeGuestSessions` after 4 hours
+- Cookie: `Max-Age=14400` ensures the browser cookie expires after 4 hours
+- Checked at WebSocket upgrade time: connecting with an expired `_wt_guest` token is rejected (HTTP 401)
+
 ---
 
 ## 3. Session Management
@@ -213,8 +303,9 @@ PuTTrY uses **two types of cookies** to manage authentication state:
 
 | Cookie | Purpose | TTL | Attributes |
 |--------|---------|-----|-----------|
-| `_wt_session` | Full authentication session | 24 hours | HttpOnly, SameSite=Strict, Path=/ |
+| `_wt_session` | Full authentication session (owner) | 24 hours | HttpOnly, SameSite=Strict, Path=/ |
 | `_wt_temp` | 2FA in-progress (temporary) | 5 minutes | HttpOnly, SameSite=Strict, Path=/ |
+| `_wt_guest` | Guest session authentication | 4 hours | HttpOnly, SameSite=Lax, Path=/ |
 
 **Cookie Attributes**
 - `HttpOnly`: Prevents JavaScript from accessing the cookie (mitigates XSS)
@@ -332,9 +423,15 @@ WebSocket connections (used for terminal I/O and sync messages) require authenti
 
 **Initial Authentication (Upgrade Time)**
 - WebSocket upgrade requests are validated at the HTTP upgrade phase
-- The `_wt_session` browser session cookie is extracted and validated
-- If the session is invalid or expired, the upgrade is rejected (`socket.destroy()`)
+- Both owner (`_wt_session`) and guest (`_wt_guest`) cookies are checked: owner token is tried first, then guest token if owner token is absent or invalid
+- If neither token is valid or present, the upgrade is rejected (`socket.destroy()`)
 - Returns `HTTP 401` for invalid sessions
+- For guest tokens: the session's `expiresAt` timestamp is checked; expired sessions are eagerly deleted
+
+**Guest WebSocket Restrictions**
+- When a guest connects to a terminal WebSocket, the connection is marked with `isGuest=true` and the guest's name and session ID are passed downstream
+- Guest connections are read-only by default—input from a guest is only accepted after the owner approves a lock request
+- Guest connections to the `/sync` WebSocket cannot send commands; they receive state broadcasts like any other client but cannot initiate session creation, settings changes, or guest link management
 
 **Periodic Revalidation**
 - While a WebSocket connection is open, the server re-validates the session **every 30 seconds**
@@ -502,6 +599,11 @@ PuTTrY assumes responsibility for application-level security but delegates infra
 | **Log Injection** | Attacker injects log control codes | `clientId` sanitized to `[a-zA-Z0-9\-_]*` |
 | **Settings Tampering** | Attacker changes security settings via API | `AUTH_DISABLED` and rate limits are CLI-only (not API-accessible) |
 | **Newline Injection** | Attacker injects new `.env` entries | Settings sanitization: `\n`, `\r`, `\0` stripped before writing |
+| **Guest Link Enumeration** | Attacker guesses or brute-forces invite tokens | 256-bit random token (64 hex chars); 20 redemption attempts per 15 min per IP |
+| **Guest Token Theft** | Attacker steals `_wt_guest` cookie | `HttpOnly` prevents JavaScript access; `Secure` flag enforces HTTPS |
+| **Guest Link Reuse** | Attacker attempts to redeem a link twice | One-time use enforcement: `usedAt` timestamp permanently invalidates link on first redemption |
+| **Unauthorized Guest Input** | Guest bypasses read-only mode to type | Write lock requires explicit owner approval via lock-request flow; 30-second auto-expiry prevents indefinite lockout |
+| **Guest Overstay** | Guest session persists longer than intended | Owner can revoke instantly; 4-hour hard TTL enforced in-memory and via cookie `Max-Age` |
 
 ---
 
@@ -526,6 +628,14 @@ When reviewing PuTTrY's security:
 - [ ] Env var allowlist: only 17 approved keys loaded
 - [ ] Settings API cannot modify `AUTH_DISABLED` or rate limits
 - [ ] Settings values sanitized: `\n`, `\r`, `\0` stripped
+- [ ] Guest link tokens are 256-bit random (64 hex chars), single-use, stored in-memory only
+- [ ] Guest session TTL is 4 hours; enforced in-memory (`expiresAt`) and via cookie `Max-Age=14400`
+- [ ] `_wt_guest` cookie uses `HttpOnly`, `Secure` (default), `SameSite=Lax` (intentional for invite URL flow)
+- [ ] Guest redemption rate-limited: 20 attempts per 15 minutes per IP
+- [ ] Guests cannot access file manager, change settings, or manage guest links
+- [ ] Guest write access requires explicit owner approval; lock request auto-expires after 30 seconds
+- [ ] Revoking a guest link immediately disconnects active sessions via `guest-revoked` sync event
+- [ ] WebSocket upgrades validate both owner and guest tokens; guest tokens checked for expiry
 
 ---
 

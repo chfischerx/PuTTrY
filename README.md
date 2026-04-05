@@ -16,6 +16,7 @@ A secure, browser-based terminal that keeps your server sessions alive across de
 - [User Guide](#user-guide)
 - [Configuration Reference](#configuration-reference)
 - [Managing Terminal Sessions](#managing-terminal-sessions)
+- [Guest Links](#guest-links)
 - [File Manager](#file-manager)
 - [Security Architecture](#security-architecture)
 - [Network and Infrastructure Security](#network-and-infrastructure-security)
@@ -41,14 +42,14 @@ PuTTrY is a single-user, web-based terminal emulator that runs on your server, a
 
 ### Single-User Per Instance
 
-PuTTrY is designed to be run by a single user in their home directory. Each terminal session created via PuTTrY inherits the permissions of the user who started it—exactly the same as SSH. If multiple users on the same server want to use PuTTrY, each must run their own separate instance in their respective home directory. Multiple PuTTrY instances on the same server require different host ports. While PuTTrY can be used for ad-hoc multi-user collaboration (by sharing your session password), its core design is as a personal terminal for one user across many devices.
+PuTTrY is designed to be run by a single user in their home directory. Each terminal session created via PuTTrY inherits the permissions of the user who started it—exactly the same as SSH. If multiple users on the same server want to use PuTTrY, each must run their own separate instance in their respective home directory. Multiple PuTTrY instances on the same server require different host ports. PuTTrY supports secure guest access via Guest Links, allowing colleagues to observe or request control of terminal sessions without sharing your credentials. Its core design is as a personal terminal for one user across many devices.
 
 ### Perfect For
 
 - **Agentic AI with long-running tasks**: Start an autonomous agent on your server from your work machine, then monitor its progress from your phone on your commute without interrupting the process
 - **CLI-controlled systems**: Maintain persistent connections to command-line tools and services that expect continuous sessions
 - **Cross-device workflows**: Begin work on a desktop, seamlessly continue from a laptop or mobile device without reconnecting
-- **Collaborative troubleshooting**: Share your session password with a colleague to debug a problem together in real-time
+- **Collaborative troubleshooting**: Invite a colleague with a Guest Link so they can observe your terminal sessions and optionally request control — no password sharing required
 - **On-the-go administration**: Interact with critical server processes from anywhere, even from devices never designed for SSH
 
 **About the name**: PuTTrY is a homage to [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html), the pioneering SSH client created in the late 1990s that revolutionized terminal access for countless users. While PuTTrY takes a fundamentally different approach—shifting from desktop client to web-based backend—we honor the technical innovation and reliability that made PuTTY indispensable for decades. Some people still use PuTTY today. This project builds on the foundation of solutions that worked seamlessly across generations of computing.
@@ -305,15 +306,46 @@ PuTTrY implements a per-shell write lock to coordinate input:
 
 This design prevents simultaneous keyboard input from multiple sources from corrupting shell state or producing unpredictable results.
 
-### Collaborative Troubleshooting
+## Guest Links
 
-You can share your session password with a trusted colleague, allowing them to connect to your PuTTrY instance from their own browser. You can then:
+PuTTrY supports secure guest access via **Guest Links**—one-time invite URLs that allow colleagues to observe your terminal sessions without requiring your credentials.
 
-- Both observe the same terminal session in real-time
-- Take turns writing (whoever holds the lock has control)
-- Switch who's in control as you work through a problem together
+### Creating a Guest Link
 
-> ⚠️ **Important**: The write lock coordinates input within a single terminal session only. If you and a colleague are working in different terminal sessions (different processes), there's no automatic coordination. This is intentional—PuTTrY respects standard Unix permissions. If you both edit the same file from different terminal sessions, the last write wins, just like any other collaborative editing scenario. Coordination of concurrent work on shared files must be handled outside PuTTrY (version control, file locks, etc.).
+From the top toolbar, click the **guest icon** (👥) to open the Guest Links panel:
+
+1. Enter a descriptive name for the invite (e.g., "Debug session", "Support access")
+2. Click **Create Link**
+3. Copy the generated invite URL and share it with your colleague
+
+Each link is unique and one-time use—once redeemed, the guest gains access to your terminal sessions. The link itself expires if not redeemed, and you can revoke it at any time from the Guest Links panel.
+
+### Guest View and Control Flow
+
+When a colleague opens your Guest Link:
+
+1. **Observer mode** (read-only): They see all your terminal sessions and can watch output in real-time, but cannot type or send input
+2. **Requesting control**: If they want to interact with a session, they can click the session and select "Request Control"
+3. **Approval dialog**: You see a notification and a dialog asking you to approve or deny the request
+4. **Control granted**: If approved, the guest receives write access to that session. If denied, they remain in read-only mode
+
+The same [write lock mechanism](#write-lock-and-control) applies: only one browser (guest or owner) can control a session at a time. The guest can take the lock, and you can reclaim it at any time.
+
+### Revoking Guest Access
+
+From the Guest Links panel, you can:
+
+- **Revoke a single link**: Click the delete icon next to a link to revoke it. Active guest sessions from that link are immediately disconnected
+- **Remove all links**: Click "Remove All" to revoke all guest links at once and disconnect all active guest sessions
+
+Guest sessions expire automatically after 4 hours of inactivity.
+
+### Security Notes
+
+- **Password not required**: Guests never need your session password—only the invite URL
+- **Immediate revocation**: Revoking a link immediately logs out any active guest sessions
+- **Limited permissions**: Guests can only observe and request control; they cannot change your settings, create new links, or access files beyond what your user can access
+- **Session isolation**: Each guest link is tracked separately, so you know which colleague is connected
 
 ## File Manager
 

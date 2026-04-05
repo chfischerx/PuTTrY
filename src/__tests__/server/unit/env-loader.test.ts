@@ -7,7 +7,7 @@ vi.mock("node:os", () => ({
   homedir: () => "/fake/home",
 }))
 
-import { loadEnvFiles } from "../../../server/env-loader"
+import { loadEnvFiles } from "../../../server/lib/env"
 
 describe("env-loader", () => {
   beforeEach(() => {

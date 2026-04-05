@@ -6,7 +6,7 @@ import request from "supertest"
 // Use a shared Map so state persists across mocks
 let mockSessions = new Map<string, any>()
 
-vi.mock("../../../server/pty-manager.js", () => ({
+vi.mock("../../../server/sessions/pty-manager.js", () => ({
   createSession: vi.fn((cols: number, rows: number, _clientId: any) => {
     const id = `session-${Date.now()}-${Math.random().toString(36).slice(2)}`
     const session = {
@@ -45,7 +45,7 @@ vi.mock("../../../server/pty-manager.js", () => ({
   }),
 }))
 
-vi.mock("../../../server/logger.js", () => ({
+vi.mock("../../../server/lib/logger.js", () => ({
   default: {
     error: vi.fn(),
     warn: vi.fn(),
@@ -53,7 +53,7 @@ vi.mock("../../../server/logger.js", () => ({
   },
 }))
 
-import { createTerminalRouter } from "../../../server/terminal-routes"
+import { createTerminalRouter } from "../../../server/routes/terminal"
 
 describe("terminal-routes", () => {
   let app: any
@@ -120,7 +120,7 @@ describe("terminal-routes", () => {
     })
 
     it("should return 500 when createSession throws", async () => {
-      const { createSession } = await import("../../../server/pty-manager.js")
+      const { createSession } = await import("../../../server/sessions/pty-manager.js")
       vi.mocked(createSession).mockImplementationOnce(() => {
         throw new Error("Failed to create session")
       })

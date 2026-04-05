@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { generateXkcdPassword, generateRandomPassword } from "../../../lib/password-gen"
+import { generateXkcdPassword, generateRandomPassword } from "../../../shared/utils/password-gen"
 
 describe("password-gen", () => {
   describe("generateXkcdPassword", () => {

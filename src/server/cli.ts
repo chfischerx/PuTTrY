@@ -5,7 +5,7 @@ import { existsSync, readFileSync, unlinkSync, openSync, closeSync } from "node:
 import { join } from "node:path"
 import { homedir } from "node:os"
 import { setTimeout as setTimeoutPromise } from "node:timers/promises"
-import { loadEnvFiles } from "./env-loader.js"
+import { loadEnvFiles } from "./lib/env.js"
 import { runConfigureWizard } from "./cli-configure.js"
 
 const PID_DIR = join(homedir(), ".puttry")
@@ -201,8 +201,8 @@ async function showPassword(): Promise<void> {
 
 async function rotatePassword(): Promise<void> {
   loadEnvFiles()
-  const { initializeConfig } = await import("./settings-api.js")
-  const { initAuthState, rotateSessionPassword } = await import("./auth-state.js")
+  const { initializeConfig } = await import("./lib/settings.js")
+  const { initAuthState, rotateSessionPassword } = await import("./auth/state.js")
 
   initializeConfig()
   await initAuthState()
@@ -226,8 +226,8 @@ async function rotatePassword(): Promise<void> {
 
 async function setPassword(password: string): Promise<void> {
   loadEnvFiles()
-  const { initializeConfig } = await import("./settings-api.js")
-  const { initAuthState, setSessionPassword } = await import("./auth-state.js")
+  const { initializeConfig } = await import("./lib/settings.js")
+  const { initAuthState, setSessionPassword } = await import("./auth/state.js")
 
   initializeConfig()
   await initAuthState()
@@ -249,7 +249,7 @@ async function setPassword(password: string): Promise<void> {
 
 async function listConfig(): Promise<void> {
   loadEnvFiles()
-  const { initializeConfig, config } = await import("./settings-api.js")
+  const { initializeConfig, config } = await import("./lib/settings.js")
 
   initializeConfig()
 
@@ -263,7 +263,7 @@ async function listConfig(): Promise<void> {
 
 async function setConfig(key: string, value: string): Promise<void> {
   loadEnvFiles()
-  const { initializeConfig, updateSetting } = await import("./settings-api.js")
+  const { initializeConfig, updateSetting } = await import("./lib/settings.js")
 
   initializeConfig()
   const result = updateSetting(key, value)
@@ -281,7 +281,7 @@ async function setConfig(key: string, value: string): Promise<void> {
 
 async function enableTotp(): Promise<void> {
   loadEnvFiles()
-  const { initializeConfig, updateSetting } = await import("./settings-api.js")
+  const { initializeConfig, updateSetting } = await import("./lib/settings.js")
 
   initializeConfig()
   const result = updateSetting("TOTP_ENABLED", "true")
@@ -297,7 +297,7 @@ async function enableTotp(): Promise<void> {
 
 async function disableTotp(): Promise<void> {
   loadEnvFiles()
-  const { initializeConfig, updateSetting } = await import("./settings-api.js")
+  const { initializeConfig, updateSetting } = await import("./lib/settings.js")
 
   initializeConfig()
   const result = updateSetting("TOTP_ENABLED", "false")
@@ -314,7 +314,7 @@ async function disableTotp(): Promise<void> {
 
 async function resetTotp(): Promise<void> {
   loadEnvFiles()
-  const { clear2FAState } = await import("./auth-state.js")
+  const { clear2FAState } = await import("./auth/state.js")
 
   clear2FAState()
   console.log("✓ TOTP configuration cleared.")
@@ -322,7 +322,7 @@ async function resetTotp(): Promise<void> {
 }
 
 async function listPasskeys(): Promise<void> {
-  const { getPasskeys } = await import("./passkey-state.js")
+  const { getPasskeys } = await import("./auth/passkey-state.js")
 
   const passkeys = getPasskeys()
   if (passkeys.length === 0) {
@@ -341,7 +341,7 @@ async function listPasskeys(): Promise<void> {
 }
 
 async function resetPasskeys(): Promise<void> {
-  const { getPasskeys, clearPasskeys } = await import("./passkey-state.js")
+  const { getPasskeys, clearPasskeys } = await import("./auth/passkey-state.js")
 
   const passkeys = getPasskeys()
   if (passkeys.length === 0) {

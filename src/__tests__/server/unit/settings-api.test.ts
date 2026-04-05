@@ -7,7 +7,7 @@ vi.mock("node:os", () => ({
   homedir: () => "/fake/home",
 }))
 
-import { config, parseEnvFile, writeEnvFile, updateSetting, getPublicConfig, getEnvFilePath } from "../../../server/settings-api"
+import { config, parseEnvFile, writeEnvFile, updateSetting, getPublicConfig, getEnvFilePath } from "../../../server/lib/settings"
 
 describe("settings-api", () => {
   beforeEach(() => {
@@ -220,12 +220,12 @@ describe("settings-api", () => {
       expect(publicConfig).not.toHaveProperty("AUTH_DISABLED")
     })
 
-    it("should not include rate limit keys (HIGH-1)", () => {
+    it("should include rate limit keys (configurable via UI)", () => {
       const publicConfig = getPublicConfig()
-      expect(publicConfig).not.toHaveProperty("RATE_LIMIT_GLOBAL_MAX")
-      expect(publicConfig).not.toHaveProperty("RATE_LIMIT_SESSION_PASSWORD_MAX")
-      expect(publicConfig).not.toHaveProperty("RATE_LIMIT_TOTP_MAX")
-      expect(publicConfig).not.toHaveProperty("RATE_LIMIT_PASSKEY_CHALLENGE_MAX")
+      expect(publicConfig).toHaveProperty("RATE_LIMIT_GLOBAL_MAX")
+      expect(publicConfig).toHaveProperty("RATE_LIMIT_SESSION_PASSWORD_MAX")
+      expect(publicConfig).toHaveProperty("RATE_LIMIT_TOTP_MAX")
+      expect(publicConfig).toHaveProperty("RATE_LIMIT_PASSKEY_CHALLENGE_MAX")
     })
 
     it("should include public settings", () => {
