@@ -1,4 +1,4 @@
-import { loadEnvFiles } from "./env-loader.js"
+import { loadEnvFiles } from "./lib/env.js"
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { homedir } from "node:os"
@@ -8,7 +8,7 @@ import { homedir } from "node:os"
  */
 export async function runConfigureWizard(): Promise<void> {
   loadEnvFiles()
-  const { getEnvFilePath, parseEnvFile, writeEnvFile } = await import("./settings-api.js")
+  const { getEnvFilePath, parseEnvFile, writeEnvFile } = await import("./lib/settings.js")
   const readline = await import("node:readline")
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
@@ -185,8 +185,8 @@ export async function runConfigureWizard(): Promise<void> {
   if (shouldGeneratePassword) {
     console.log("─── Generating Session Password ───────────────────\n")
     try {
-      const { initializeConfig } = await import("./settings-api.js")
-      const { initAuthState, rotateSessionPassword } = await import("./auth-state.js")
+      const { initializeConfig } = await import("./lib/settings.js")
+      const { initAuthState, rotateSessionPassword } = await import("./auth/state.js")
 
       initializeConfig()
       await initAuthState()

@@ -5,7 +5,7 @@ import {
   activeSessions, pendingTotpSessions, parseBrowserSessionToken, parseTempSessionToken,
   createBrowserSession, createTempSession, clearBrowserSessionCookie, clearTempSessionCookie,
   standaloneChallenges, pendingTotpSecrets,
-} from "../session-store.js"
+} from "../sessions/store.js"
 import { RP_NAME, getPasskeyOrigin, getPasskeyRpId, storeChallengeForSession, getChallengeForSession } from "./passkey-config.js"
 import { createRequireAuth, createRequireAuthOrTempSession } from "./middleware.js"
 
@@ -22,9 +22,9 @@ export async function createAuthRouter(
   const router = Router()
 
   // Import dependencies
-  const { verifySessionPassword, rotateSessionPassword, get2FAState, save2FAState, clear2FAState, setSessionPassword } = await import("../auth-state.js")
-  const { verifyTotp, generateQRCode, generateTotpSecret } = await import("../totp-helper.js")
-  const { getPasskeys, savePasskey, deletePasskey, getPasskeyById } = await import("../passkey-state.js")
+  const { verifySessionPassword, rotateSessionPassword, get2FAState, save2FAState, clear2FAState, setSessionPassword } = await import("./state.js")
+  const { verifyTotp, generateQRCode, generateTotpSecret } = await import("./totp-helper.js")
+  const { getPasskeys, savePasskey, deletePasskey, getPasskeyById } = await import("./passkey-state.js")
   const { generateRegistrationOptions, verifyRegistrationResponse, generateAuthenticationOptions, verifyAuthenticationResponse } = await import("@simplewebauthn/server")
 
   const requireAuth = createRequireAuth(config)
@@ -216,6 +216,12 @@ export async function createAuthRouter(
       logger.error(`[auth] TOTP verification error: ${err instanceof Error ? err.message : err}`)
       res.status(500).json({ error: "Verification failed" })
     }
+  })
+
+  // GET /api/auth/2fa/status - check if TOTP is registered
+  router.get("/2fa/status", requireAuth, async (_req: Request, res: Response) => {
+    const totpState = get2FAState()
+    res.json({ registered: totpState !== null && totpState.verified === true })
   })
 
   // POST /api/auth/2fa/disable

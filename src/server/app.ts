@@ -2,8 +2,8 @@ import express, { type Request, type Response } from "express"
 import type { RateLimitRequestHandler } from "express-rate-limit"
 import { createRequireAuth } from "./auth/middleware.js"
 import { createAuthRouter } from "./auth/routes.js"
-import { activeSessions, parseBrowserSessionToken } from "./session-store.js"
-import { getPublicConfig } from "./settings-api.js"
+import { activeSessions, parseBrowserSessionToken } from "./sessions/store.js"
+import { getPublicConfig } from "./lib/settings.js"
 
 /**
  * Create and configure the Express app with all shared middleware and routes
@@ -15,13 +15,14 @@ export async function createApp(options: {
   sessionPasswordLimiter: RateLimitRequestHandler
   totpVerifyLimiter?: RateLimitRequestHandler
   passkeyChallengeLimiter?: RateLimitRequestHandler
+  guestRedeemLimiter?: RateLimitRequestHandler
   globalLimiter: RateLimitRequestHandler
   createTerminalRouter: () => any
   updateSetting: (key: string, value: string) => any
   devMode?: boolean
 }) {
   const app = express()
-  const { config, logger, sessionPasswordLimiter, totpVerifyLimiter, passkeyChallengeLimiter, globalLimiter, createTerminalRouter, updateSetting, devMode = false } = options
+  const { config, logger, sessionPasswordLimiter, totpVerifyLimiter, passkeyChallengeLimiter, guestRedeemLimiter, globalLimiter, createTerminalRouter, updateSetting, devMode = false } = options
 
   // Trust proxy — needed when running behind ALB, reverse proxy, etc.
   // Set to 1 to trust the first proxy (common for ALB)
@@ -63,23 +64,42 @@ export async function createApp(options: {
 
   // Create auth middleware for use with other endpoints
   const requireAuth = createRequireAuth(config)
+  const { createRequireOwnerOrGuestAuth } = await import("./auth/middleware.js")
+  const requireOwnerOrGuestAuth = createRequireOwnerOrGuestAuth(config)
 
   // Auth status endpoint (unauthenticated, called before login)
   app.get("/api/auth-status", async (req: Request, res: Response) => {
     if (config.AUTH_DISABLED) {
-      res.json({ authenticated: true, authDisabled: true, showAuthDisabledWarning: config.SHOW_AUTH_DISABLED_WARNING })
+      res.json({ authenticated: true, authDisabled: true, showAuthDisabledWarning: config.SHOW_AUTH_DISABLED_WARNING, isGuest: false })
       return
     }
     const browserToken = parseBrowserSessionToken(req)
     let authenticated = false
+    let isGuest = false
+    let guestName: string | null = null
+
     if (browserToken) {
       const session = activeSessions.get(browserToken)
       authenticated = !!session && session.expiresAt > Date.now()
       if (!authenticated) activeSessions.delete(browserToken)
+    } else {
+      const { parseGuestSessionToken, activeGuestSessions } = await import("./sessions/guest-store.js")
+      const guestToken = parseGuestSessionToken(req)
+      if (guestToken) {
+        const guestSession = activeGuestSessions.get(guestToken)
+        if (guestSession && guestSession.expiresAt > Date.now()) {
+          authenticated = true
+          isGuest = true
+          guestName = guestSession.name
+        } else if (guestSession) {
+          activeGuestSessions.delete(guestToken)
+        }
+      }
     }
-    const { getPasskeys } = await import("./passkey-state.js")
+
+    const { getPasskeys } = await import("./auth/passkey-state.js")
     const passkeyLoginAvailable = !config.PASSKEY_AS_2FA && getPasskeys().length > 0
-    res.json({ authenticated, authDisabled: false, showAuthDisabledWarning: false, passkeyLoginAvailable })
+    res.json({ authenticated, authDisabled: false, showAuthDisabledWarning: false, passkeyLoginAvailable, isGuest, guestName })
   })
 
   // Create and mount auth router
@@ -87,12 +107,12 @@ export async function createApp(options: {
   app.use("/api/auth", authRouter)
 
   // Config endpoint (deprecated, kept for backwards compatibility)
-  app.get("/api/config", requireAuth, (_req: Request, res: Response) => {
+  app.get("/api/config", requireOwnerOrGuestAuth, (_req: Request, res: Response) => {
     res.json({ scrollbackLines: config.SCROLLBACK_LINES })
   })
 
   // Settings endpoints
-  app.get("/api/settings", requireAuth, (_req: Request, res: Response) => {
+  app.get("/api/settings", requireOwnerOrGuestAuth, (_req: Request, res: Response) => {
     res.json(getPublicConfig())
   })
 
@@ -106,12 +126,17 @@ export async function createApp(options: {
     res.json(result)
   })
 
-  // Terminal API routes (with auth)
-  app.use("/api/sessions", requireAuth, createTerminalRouter())
+  // Terminal API routes (allow owner or guest, specific routes enforce owner-only)
+  app.use("/api/sessions", requireOwnerOrGuestAuth, createTerminalRouter())
 
   // File manager routes (with auth)
-  const { createFileRouter } = await import('./file-routes.js')
+  const { createFileRouter } = await import('./routes/files.js')
   app.use('/api/files', requireAuth, createFileRouter())
+
+  // Guest routes
+  const { createGuestRouter } = await import('./routes/guest.js')
+  const guestRouter = createGuestRouter(config, { guestRedeem: guestRedeemLimiter })
+  app.use('/api', guestRouter)
 
   return { app, allowedHostSet }
 }

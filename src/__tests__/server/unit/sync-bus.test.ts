@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { addSyncClient, broadcastSync, type SyncEvent } from "../../../server/sync-bus"
+import { addSyncClient, broadcastSync, type SyncEvent } from "../../../server/sessions/sync-bus"
 
 describe("sync-bus", () => {
   beforeEach(() => {

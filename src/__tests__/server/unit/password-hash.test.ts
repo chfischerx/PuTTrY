@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { hashPassword, verifyPassword } from "../../../server/password-hash"
+import { hashPassword, verifyPassword } from "../../../server/auth/password-hash"
 
 describe("password-hash", () => {
   it("should hash a password with a random salt", async () => {

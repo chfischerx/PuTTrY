@@ -7,20 +7,20 @@ import path from "node:path"
 import { mkdirSync, writeFileSync, unlinkSync } from "node:fs"
 import { join } from "node:path"
 import { homedir } from "node:os"
-import { loadEnvFiles } from "./env-loader.js"
+import { loadEnvFiles } from "./lib/env.js"
 
 // Load .env files (manually parse since dotenv not available)
 // First try .env.local in project directory (development), then ~/.puttry/.env (production)
 loadEnvFiles(true)
 
 // Now dynamically import to ensure config() has run
-const logger = (await import("./logger.js")).default
-const { initAuthState } = await import("./auth-state.js")
-const { globalLimiter, sessionPasswordLimiter, totpVerifyLimiter, passkeyChallengeLimiter } = await import("./rate-limit.js")
-const { createTerminalRouter } = await import("./terminal-routes.js")
-const { getSession, attachWebSocket, cleanupAll, getAllSessions, onSyncClientConnect, onSyncClientDisconnect } = await import("./pty-manager.js")
-const { addSyncClient } = await import("./sync-bus.js")
-const { config, initializeConfig, updateSetting } = await import("./settings-api.js")
+const logger = (await import("./lib/logger.js")).default
+const { initAuthState } = await import("./auth/state.js")
+const { globalLimiter, sessionPasswordLimiter, totpVerifyLimiter, passkeyChallengeLimiter, guestRedeemLimiter } = await import("./lib/rate-limit.js")
+const { createTerminalRouter } = await import("./routes/terminal.js")
+const { getSession, attachWebSocket, cleanupAll, getAllSessions, onSyncClientConnect, onSyncClientDisconnect } = await import("./sessions/pty-manager.js")
+const { addSyncClient } = await import("./sessions/sync-bus.js")
+const { config, initializeConfig, updateSetting } = await import("./lib/settings.js")
 
 // Initialize settings from environment variables
 initializeConfig()
@@ -40,7 +40,12 @@ const distPath = path.join(import.meta.dirname, "../dist")
 const {
   parseBrowserSessionToken,
   activeSessions,
-} = await import("./session-store.js")
+} = await import("./sessions/store.js")
+const {
+  parseGuestSessionToken,
+  activeGuestSessions,
+  setGuestClientId,
+} = await import("./sessions/guest-store.js")
 const { createApp } = await import("./app.js")
 
 // Log environment configuration at startup
@@ -72,6 +77,7 @@ const { app, allowedHostSet } = await createApp({
   sessionPasswordLimiter,
   totpVerifyLimiter,
   passkeyChallengeLimiter,
+  guestRedeemLimiter,
   globalLimiter,
   createTerminalRouter,
   updateSetting,
@@ -118,15 +124,27 @@ httpServer.on("upgrade", (req: IncomingMessage, socket: any, head: Buffer) => {
 
   // Handle /sync WebSocket
   if (pathname === "/sync") {
+    let syncGuestSessionId = ""
     if (!config.AUTH_DISABLED) {
       const browserToken = parseBrowserSessionToken(req)
+      const guestToken = parseGuestSessionToken(req)
       let authenticated = false
+
       if (browserToken) {
         const session = activeSessions.get(browserToken)
         authenticated = !!session && session.expiresAt > Date.now()
         if (!authenticated) activeSessions.delete(browserToken)
+      } else if (guestToken) {
+        const guestSession = activeGuestSessions.get(guestToken)
+        authenticated = !!guestSession && guestSession.expiresAt > Date.now()
+        if (authenticated && guestSession) {
+          syncGuestSessionId = guestSession.id
+        } else if (guestSession) {
+          activeGuestSessions.delete(guestToken)
+        }
       }
-      if (!browserToken || !authenticated) {
+
+      if (!authenticated) {
         socket.destroy()
         return
       }
@@ -135,6 +153,9 @@ httpServer.on("upgrade", (req: IncomingMessage, socket: any, head: Buffer) => {
       // HIGH-10: Validate clientId format to prevent log injection
       const rawClientId = url.searchParams.get('clientId') || ''
       const clientId = /^[a-zA-Z0-9\-_]*$/.test(rawClientId) ? rawClientId : ''
+      if (syncGuestSessionId && clientId) {
+        setGuestClientId(syncGuestSessionId, clientId)
+      }
       const snapshot = getAllSessions().map(s => ({ id: s.id, label: s.label, createdAt: s.createdAt, cols: s.cols, rows: s.rows, inputLockClientId: s.inputLockClientId ?? null }))
       ws.send(JSON.stringify({ type: "snapshot", sessions: snapshot }))
       addSyncClient(ws)
@@ -155,15 +176,31 @@ httpServer.on("upgrade", (req: IncomingMessage, socket: any, head: Buffer) => {
   const sessionId = pathname.slice("/terminal/".length)
 
   // Check authentication
+  let isGuest = false
+  let guestName = ""
+  let guestSessionId = ""
   if (!config.AUTH_DISABLED) {
     const browserToken = parseBrowserSessionToken(req)
+    const guestToken = parseGuestSessionToken(req)
     let authenticated = false
+
     if (browserToken) {
       const session = activeSessions.get(browserToken)
       authenticated = !!session && session.expiresAt > Date.now()
       if (!authenticated) activeSessions.delete(browserToken)
+    } else if (guestToken) {
+      const guestSession = activeGuestSessions.get(guestToken)
+      authenticated = !!guestSession && guestSession.expiresAt > Date.now()
+      if (authenticated && guestSession) {
+        isGuest = true
+        guestName = guestSession.name
+        guestSessionId = guestSession.id
+      } else if (guestSession) {
+        activeGuestSessions.delete(guestToken)
+      }
     }
-    if (!browserToken || !authenticated) {
+
+    if (!authenticated) {
       socket.write("HTTP/1.1 401 Unauthorized\r\nContent-Type: text/plain\r\n\r\nUnauthorized")
       socket.destroy()
       return
@@ -184,8 +221,8 @@ httpServer.on("upgrade", (req: IncomingMessage, socket: any, head: Buffer) => {
     const rawClientId = url.searchParams.get('clientId') ?? ''
     const clientId = /^[a-zA-Z0-9\-_]*$/.test(rawClientId) ? rawClientId : ''
     const browserToken = config.AUTH_DISABLED ? '' : (parseBrowserSessionToken(req) ?? '')
-    attachWebSocket(sessionId, ws, clientId, browserToken)
-    logger.info(`[ws] Client connected to session ${sessionId}`)
+    attachWebSocket(sessionId, ws, clientId, browserToken, { isGuest, guestName, guestSessionId })
+    logger.info(`[ws] Client connected to session ${sessionId} (guest=${isGuest})`)
   })
 })
 

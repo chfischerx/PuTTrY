@@ -1,6 +1,6 @@
 import type { Request } from "express"
 import type { IncomingMessage } from "node:http"
-import { pendingChallenges } from "../session-store.js"
+import { pendingChallenges } from "../sessions/store.js"
 
 export const RP_NAME = "PuTTrY"
 

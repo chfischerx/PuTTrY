@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { RP_NAME, getPasskeyOrigin, getPasskeyRpId, storeChallengeForSession, getChallengeForSession } from "../../../server/auth/passkey-config"
-import { pendingChallenges } from "../../../server/session-store"
+import { pendingChallenges } from "../../../server/sessions/store"
 
 describe("passkey-config", () => {
   beforeEach(() => {
