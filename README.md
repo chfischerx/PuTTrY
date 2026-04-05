@@ -320,6 +320,8 @@ From the top toolbar, click the **guest icon** (👥) to open the Guest Links pa
 
 Each link is unique and one-time use—once redeemed, the guest gains access to your terminal sessions. The link itself expires if not redeemed, and you can revoke it at any time from the Guest Links panel.
 
+<img src="https://puttry.io/assets/guest-links.png" width="50%" alt="PuTTrY - Guest Links Panel">
+
 ### Guest View and Control Flow
 
 When a colleague opens your Guest Link:

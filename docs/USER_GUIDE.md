@@ -430,6 +430,8 @@ This is perfect for:
 - Sharing session access with contractors or temporary staff without creating accounts
 - Onboarding new team members without managing separate authentication
 
+<img src="./assets/guest-links.png" width="50%" alt="PuTTrY - Guest Links Panel">
+
 ### Creating a Guest Link
 
 1. Click the **Guest Links** button (👥 icon) in the top toolbar
